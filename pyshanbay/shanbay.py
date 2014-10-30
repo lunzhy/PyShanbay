@@ -3,10 +3,9 @@ import urllib.parse
 import urllib.request
 import http.cookiejar
 import copy
-from bs4 import BeautifulSoup
 
 
-class Shanbay:
+class VisitShanbay:
     def __init__(self):
         self.base_url = 'http://www.shanbay.com'
         self.headers = {
@@ -27,7 +26,7 @@ class Shanbay:
         self.userid = ''
         return
 
-    def visit_home(self):
+    def home(self):
         home_url = self.base_url
         req = urllib.request.Request(url=home_url)
         self.opener.open(req)
@@ -40,7 +39,7 @@ class Shanbay:
         return
 
     def login(self):
-        self.visit_home()
+        self.home()
         url_login = urllib.parse.urljoin(self.base_url, '/accounts/login/')
         headers = copy.deepcopy(self.headers)
         headers.update(
@@ -61,10 +60,9 @@ class Shanbay:
                 self.userid = ck.value
         if self.userid is '':
             print('login error.')
-        print(self.userid)
         return
 
-    def members_page(self):
+    def members(self):
         url_members = urllib.parse.urljoin(self.base_url, '/team/members/')
         # it seems that headers are not required.
         req = urllib.request.Request(url=url_members, headers=self.headers)
@@ -72,12 +70,15 @@ class Shanbay:
         page_html = response.read()
         return page_html
 
+    def members_page(self, page_number):
+        url_members_page = urllib.parse.urljoin(self.base_url, '/team/members/?page=%s' % page_number )
+        req = urllib.request.Request(url=url_members_page, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
 
 if __name__ == '__main__':
-    shanbay = Shanbay()
+    shanbay = VisitShanbay()
     shanbay.login()
-    shanbay.members_page()
-
-
-cookie_handler = urllib.request.HTTPCookieProcessor()
-opener = urllib.request.build_opener(cookie_handler)
+    shanbay.members()
