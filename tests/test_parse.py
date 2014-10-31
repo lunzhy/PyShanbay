@@ -2,6 +2,7 @@ __author__ = 'Lunzhy'
 from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as pp
 
+
 def test_bs():
     shanbay = VisitShanbay()
     shanbay.login()
@@ -13,6 +14,8 @@ def test_bs():
     for page in range(1, int(total_page)+1):
         page_html = shanbay.members_page(page)
         members_names += pp.parse_member_names(page_html)
-    print(members_names)
+
+    for name in members_names:
+        print(name.encode('utf-8').decode(''))
     print(len(members_names))
     return

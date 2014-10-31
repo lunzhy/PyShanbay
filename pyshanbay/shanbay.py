@@ -10,7 +10,7 @@ class VisitShanbay:
         self.base_url = 'http://www.shanbay.com'
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-             #'Accept-Encoding': 'gzip,deflate,sdch',
+            # 'Accept-Encoding': 'gzip,deflate,sdch',
             'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4',
             'Connection': 'keep-alive',
             'Host': urllib.parse.urlsplit(self.base_url).netloc,
@@ -71,7 +71,7 @@ class VisitShanbay:
         return page_html
 
     def members_page(self, page_number):
-        url_members_page = urllib.parse.urljoin(self.base_url, '/team/members/?page=%s' % page_number )
+        url_members_page = urllib.parse.urljoin(self.base_url, '/team/members/?page=%s' % page_number)
         req = urllib.request.Request(url=url_members_page, headers=self.headers)
         response = self.opener.open(req)
         page_html = response.read()
