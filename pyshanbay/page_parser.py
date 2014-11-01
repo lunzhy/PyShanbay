@@ -1,8 +1,15 @@
 __author__ = 'Lunzhy'
 from bs4 import BeautifulSoup
+import re
 
 
-def parse_pages_members(page_html):
+def get_number_out(href):
+    patt = re.compile(r'\d+')
+    match = patt.search(href)
+    return match.group()
+
+
+def total_page_members(page_html):
     soup = BeautifulSoup(page_html)
     soup.prettify()
     links_page = soup.find_all('a', {'class': 'endless_page_link'})
@@ -22,3 +29,35 @@ def parse_member_names(page_num):
     return nicknames
 
 
+def parse_members_info(pages):
+    members = []
+    for page in pages:
+        soup = BeautifulSoup(page)
+        soup.prettify()
+        tr_members = soup.find_all('tr', {'class': 'member'})
+        for tr in tr_members:
+            td_infos = tr.find_all('td')
+
+            username = td_infos[0].find_all('img')[0].get('alt')
+            nickname = td_infos[0].find_all('a', {'class': 'nickname'})[0].get_text()
+            userid = get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href'))
+
+            points = td_infos[1].get_text()
+            days = get_number_out(td_infos[2].get_text())
+
+            rate = td_infos[3].get_text()
+
+            checked = True if 'label-success' in td_infos[4].find_all('span')[0].get('class') \
+                else False
+
+            member = {
+                'username': username,
+                'nickname': nickname,
+                'userid': userid,
+                'points': points,
+                'days': days,
+                'rate': rate,
+                'checked_today': checked
+            }
+            members.append(member)
+    return members
