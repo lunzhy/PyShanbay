@@ -1,9 +1,10 @@
 __author__ = 'Lunzhy'
 from bs4 import BeautifulSoup
 import re
+import json
 
 
-def get_number_out(href):
+def _get_number_out(href):
     patt = re.compile(r'\d+')
     match = patt.search(href)
     return match.group()
@@ -40,10 +41,10 @@ def parse_members_info(pages):
 
             username = td_infos[0].find_all('img')[0].get('alt')
             nickname = td_infos[0].find_all('a', {'class': 'nickname'})[0].get_text()
-            userid = get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href'))
+            userid = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href'))
 
             points = td_infos[1].get_text()
-            days = get_number_out(td_infos[2].get_text())
+            days = _get_number_out(td_infos[2].get_text())
 
             rate = td_infos[3].get_text()
 
@@ -61,3 +62,13 @@ def parse_members_info(pages):
             }
             members.append(member)
     return members
+
+
+def parse_today_progress(progress_page):
+    json_page = progress_page.decode('utf-8')  # bytes are returned
+    json_data = json.loads(json_page)
+    reviewed_info = json_data['data']['num_revieweds'][0]
+    reviewed = reviewed_info[-1]
+    if reviewed is 0:
+        return False
+    return True
