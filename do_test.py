@@ -4,7 +4,7 @@ from tests import test_parse
 
 def main():
     # test_parse.test_parse_info()
-    test_parse.test_progress()
+    test_parse.test()
 
 
 if __name__ == '__main__':

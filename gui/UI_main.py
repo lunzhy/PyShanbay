@@ -1,21 +1,16 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*- 
 __author__ = 'Lunzhy'
-
-import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
-from PyQt4.QtCore import *
 
 
-class MainFormWidget(QtGui.QWidget):
+class UIMainWidget(QtGui.QWidget):
     def __init__(self):
         super().__init__()
         self.setup_ui()
         self.set_ui_text()
-        self.set_widget_property()
 
-        self.tb_members_data = []
 
     def setup_ui(self):
         # to do with the main form
@@ -26,10 +21,10 @@ class MainFormWidget(QtGui.QWidget):
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(9, 9, 241, 491))
         self.verticalLayout_users = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout_users.setMargin(0)
-        self.table_members = QtGui.QTableWidget(self.verticalLayoutWidget)
-        self.table_members.setColumnCount(0)
-        self.table_members.setRowCount(0)
-        self.verticalLayout_users.addWidget(self.table_members)
+        self.tb_members = QtGui.QTableWidget(self.verticalLayoutWidget)
+        self.tb_members.setColumnCount(0)
+        self.tb_members.setRowCount(0)
+        self.verticalLayout_users.addWidget(self.tb_members)
         self.horizontalLayout_refresh = QtGui.QHBoxLayout()
         self.btn_refresh = QtGui.QPushButton(self.verticalLayoutWidget)
         self.horizontalLayout_refresh.addWidget(self.btn_refresh)
@@ -149,17 +144,17 @@ class MainFormWidget(QtGui.QWidget):
     def set_ui_text(self):
         self.setWindowTitle("Shanbay Manage")
         self.btn_refresh.setText("刷新")
-        self.label_refresh_time.setText("TextLabel")
+        self.label_refresh_time.setText("数据时间：00-00 12:12")
         self.label_recent_checkin.setText("最近七天打卡情况")
         self.btn_recent_checkin.setText("获取")
         self.chb_message.setText("发送短信")
         self.btn_kickout.setText("踢出小组")
-        self.text_points.setText("TextLabel")
-        self.text_checkin.setText("TextLabel")
-        self.text_nickname.setText("TextLabel")
-        self.text_rank.setText("TextLabel")
-        self.text_days.setText("TextLabel")
-        self.text_rates.setText("TextLabel")
+        self.text_points.setText("(N/A)")
+        self.text_checkin.setText("(N/A)")
+        self.text_nickname.setText("(N/A)")
+        self.text_rank.setText("(N/A)")
+        self.text_days.setText("(N/A)")
+        self.text_rates.setText("(N/A)")
         self.label_days.setText("组龄：")
         self.label_nickname.setText("昵称：")
         self.label_checkin.setText("打卡：")
@@ -169,45 +164,3 @@ class MainFormWidget(QtGui.QWidget):
         self.label_recent_words.setText("最近七天背词情况")
         self.btn_recent_words.setText("获取")
         return
-
-    def set_widget_property(self):
-        self.table_members.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.table_members.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.table_members.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        self.table_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-
-        self.table_members.itemClicked.connect(self.selected_member)
-        # self.btn_refresh.clicked.connect(lambda: self.set_data_members([]))
-        return
-
-    def set_data_members(self, members_data):
-        self.tb_members_data = members_data
-
-        self.table_members.setColumnCount(2)
-        self.table_members.setRowCount(len(members_data))
-
-        for row_index, member in enumerate(members_data):
-            new_item = QtGui.QTableWidgetItem(member['nickname'])
-            self.table_members.setItem(row_index, 0, new_item)
-            new_item = QtGui.QTableWidgetItem(str(member['checked_today']))
-            self.table_members.setItem(row_index, 1, new_item)
-        return
-
-    def selected_member(self):
-        select = self.table_members.selectionModel().selectedRows()
-        row = select[0].row()
-        member = self.tb_members_data[row]
-        self.text_nickname.setText(member['nickname'])
-        self.text_checkin.setText('已打卡' if member['checked_today'] else '未打卡')
-        self.text_days.setText(member['days'])
-        self.text_rank.setText(str(row+1))
-        self.text_points.setText(member['points'])
-        self.text_rates.setText(member['rate'])
-        return
-
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    main_form = MainFormWidget()
-
-    main_form.show()
-    app.exec_()

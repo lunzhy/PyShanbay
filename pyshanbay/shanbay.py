@@ -87,6 +87,20 @@ class VisitShanbay:
         page_html = response.read()
         return page_html
 
+    def get_checkin(self, userid):
+        url_checkin = urljoin(self.base_url, 'http://www.shanbay.com/checkin/user/%s/' % userid)
+        req = request.Request(url=url_checkin, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
+    def get_server_time(self):
+        # this is a temporary method
+        import datetime
+        now = datetime.datetime.now()
+        print(now)
+        return now
+
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()

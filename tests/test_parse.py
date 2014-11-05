@@ -42,12 +42,14 @@ def test_parse_info():
     return
 
 
-def test_progress():
+def test():
     shanbay = VisitShanbay()
     shanbay.login()
 
-    page = shanbay.get_progress('6684706')
+    # page = shanbay.get_progress('6684706')
+    # today = parser.parse_today_progress(page)
+    # print(today)
 
-    today = parser.parse_today_progress(page)
-    print(today)
+    page = shanbay.get_checkin('5537146')
+    parser.paser_checkin(page)
     return

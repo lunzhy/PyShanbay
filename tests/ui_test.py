@@ -7,7 +7,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
-from gui.main_form import MainFormWidget
+from gui.ui_main import UIMainWidget
 
 
 class MainForm(QWidget):
@@ -64,7 +64,7 @@ def get_data():
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    main_form = MainFormWidget()
+    main_form = UIMainWidget()
     main_form.set_data_members(get_data())
     main_form.show()
     app.exec_()
