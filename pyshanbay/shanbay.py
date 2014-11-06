@@ -88,7 +88,7 @@ class VisitShanbay:
         return page_html
 
     def get_checkin(self, userid):
-        url_checkin = urljoin(self.base_url, 'http://www.shanbay.com/checkin/user/%s/' % userid)
+        url_checkin = urljoin(self.base_url, '/checkin/user/%s/' % userid)
         req = request.Request(url=url_checkin, headers=self.headers)
         response = self.opener.open(req)
         page_html = response.read()
@@ -101,8 +101,37 @@ class VisitShanbay:
         print(now)
         return now
 
+    def send_message(self, recipient_list, subject, message_text):
+        headers = copy.deepcopy(self.headers)
+        #headers.update(
+        #    {'Content-Type': 'application/x-www-form-urlencoded',
+             # 'Cache-Control': 'max-age=0',
+             #'Origin': self.base_url,
+        #     'Referer': 'http://www.shanbay.com/message/compose/',
+        #     }
+        #)
+        headers.update(
+            {'Content-Type': 'application/x-www-form-urlencoded',
+             'Referer': 'http://www.shanbay.com/message/compose/',
+             'Origin': self.base_url}
+        )
+        print(headers)
+        recipient = ','.join(recipient_list)
+        post_data_origin = {
+            'csrfmiddlewaretoken': self.csfrtoken,
+            'recipient': recipient,
+            'subject': subject,
+            'body': message_text,
+        }
+        post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
+        print(post_data)
+        req = request.Request(url='http://www.shanbay.com/message/compose/', data=post_data, headers=headers)
+        response = self.opener.open(req)
+        return response.url
+
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
-    shanbay.members()
+    ret = shanbay.send_message(['dummycoffee', 'ibluecoffee'], 'frommwwwine', 'frommwwwian')
+    print(ret, 1)

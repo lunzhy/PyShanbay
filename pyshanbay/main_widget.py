@@ -4,7 +4,7 @@ __author__ = 'Lunzhy'
 import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
-from gui.ui_main import UIMainWidget
+from gui.UI_main import UIMainWidget
 from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 import datetime
@@ -15,7 +15,9 @@ class MainWidget(UIMainWidget):
         super().__init__()
         self.set_widget_property()
         self.members_data = []
+        # login shanbay
         self.shanbay = VisitShanbay()
+        self.shanbay.login()
         return None
 
 
@@ -85,9 +87,6 @@ class MainWidget(UIMainWidget):
         return None
 
     def refresh_members_data(self):
-        # log in shanbay.com
-        self.shanbay.login()
-
         # get total page number of members
         main_page_members = self.shanbay.members()
         total_page = parser.total_page_members(main_page_members)
