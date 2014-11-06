@@ -119,12 +119,30 @@ class VisitShanbay:
         post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
         req = request.Request(url=url_sendmsg, data=post_data, headers=self.headers)
         response = self.opener.open(req)
-        return response.url
+        return response.status == 200
 
+    def dismiss_member(self, userid_list):
+        url_dismiss = urljoin(self.base_url, '/api/v1/team/member/')
+        headers = copy.deepcopy(self.headers)
+        headers.update(
+            {'X-Requested-With': 'XMLHttpRequest'}
+        )
+
+        if isinstance(userid_list, (list, tuple)):
+            user_ids = ','.join(map(str, userid_list))
+        else:
+            user_ids = userid_list
+        post_data_origin = {
+            'action': 'dismiss',
+            'ids': user_ids
+        }
+        post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
+        req = request.Request(url=url_dismiss, data=post_data, headers=headers)
+        response = self.opener.open(req)
+        return response.status == 200
+        return
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
-    time = shanbay.get_server_time()
-    print(time)
 
