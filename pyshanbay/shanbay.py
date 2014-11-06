@@ -6,6 +6,7 @@ import copy
 from urllib.parse import urlsplit
 from urllib.parse import urljoin
 from urllib import request
+import datetime
 
 
 class VisitShanbay:
@@ -61,6 +62,10 @@ class VisitShanbay:
         for ck in self.cookie:
             if ck.name == 'userid':
                 self.userid = ck.value
+            # it is very important to refresh the csrf token, because after login a new token is set
+            if ck.name == 'csrftoken':
+                self.csfrtoken = ck.value
+
         if self.userid is '':
             print('login error.')
         return
@@ -96,26 +101,14 @@ class VisitShanbay:
 
     def get_server_time(self):
         # this is a temporary method
-        import datetime
-        now = datetime.datetime.now()
-        print(now)
+        req = request.Request(url=self.base_url, headers=self.headers)
+        response = self.opener.open(req)
+        time_str = response.headers.get('date')
+        now = datetime.datetime.strptime(time_str, '%a, %d %b %Y %H:%M:%S GMT')
         return now
 
     def send_message(self, recipient_list, subject, message_text):
-        headers = copy.deepcopy(self.headers)
-        #headers.update(
-        #    {'Content-Type': 'application/x-www-form-urlencoded',
-             # 'Cache-Control': 'max-age=0',
-             #'Origin': self.base_url,
-        #     'Referer': 'http://www.shanbay.com/message/compose/',
-        #     }
-        #)
-        headers.update(
-            {'Content-Type': 'application/x-www-form-urlencoded',
-             'Referer': 'http://www.shanbay.com/message/compose/',
-             'Origin': self.base_url}
-        )
-        print(headers)
+        url_sendmsg = urljoin(self.base_url, '/message/compose/')
         recipient = ','.join(recipient_list)
         post_data_origin = {
             'csrfmiddlewaretoken': self.csfrtoken,
@@ -124,8 +117,7 @@ class VisitShanbay:
             'body': message_text,
         }
         post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
-        print(post_data)
-        req = request.Request(url='http://www.shanbay.com/message/compose/', data=post_data, headers=headers)
+        req = request.Request(url=url_sendmsg, data=post_data, headers=self.headers)
         response = self.opener.open(req)
         return response.url
 
@@ -133,5 +125,6 @@ class VisitShanbay:
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
-    ret = shanbay.send_message(['dummycoffee', 'ibluecoffee'], 'frommwwwine', 'frommwwwian')
-    print(ret, 1)
+    time = shanbay.get_server_time()
+    print(time)
+

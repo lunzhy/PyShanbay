@@ -4,7 +4,7 @@ __author__ = 'Lunzhy'
 import sys
 from PyQt4 import QtGui
 from PyQt4 import QtCore
-from gui.UI_main import UIMainWidget
+from gui.ui_main import UIMainWidget
 from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 import datetime
