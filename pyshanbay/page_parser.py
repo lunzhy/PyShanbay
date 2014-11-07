@@ -142,18 +142,18 @@ def parse_members_manage(pages):
         for tr in tr_members:
             # a new data-id is assigned to member when he joins the team
             data_id = tr.get('data-id')
-            username = tr.get('data-name')
+            nickname = tr.get('data-name')
 
             td_infos = tr.find_all('td')
-            nickname = td_infos[0].find_all('a', {'class': 'nickname'})[0].get_text().strip()
+            username = td_infos[0].find_all('img')[0].get('alt').strip()
             login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
                 'href')).strip()
             points = td_infos[1].get_text().strip()
             days = _get_number_out(td_infos[2].get_text()).strip()
             rate = td_infos[3].get_text().strip()
-            checkin_today = True if 'label-success' in td_infos[4].find_all('span')[0].get(
+            checkin_yesterday = True if 'label-success' in td_infos[4].find_all('span')[0].get(
                 'class') else False
-            checkin_yesterday = True if 'label-success' in td_infos[5].find_all('span')[0].get(
+            checkin_today = True if 'label-success' in td_infos[5].find_all('span')[0].get(
                 'class') else False
 
             member = {

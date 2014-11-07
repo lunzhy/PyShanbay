@@ -7,18 +7,18 @@ import os
 
 class ShanbayConfig:
     def __init__(self, filename='config.ini'):
-        self.config = configparser.ConfigParser()
+        self.cfg_parser = configparser.ConfigParser()
         try:
-            self.config.read_file(open(filename))
+            self.cfg_parser.read_file(open(filename))
         except FileNotFoundError:
             self.create_config(filename)
         return
 
     def create_config(self, filename):
-        self.config.add_section('Global')
-        section = self.config['Global']
-        section['username'] = 'ibluecoffee'
-        section['password'] = '870625@shanbay'
+        self.cfg_parser.add_section('Global')
+        section = self.cfg_parser['Global']
+        section['username'] = 'username'
+        section['password'] = 'password'
         with open(filename, 'w') as file:
-            self.config.write(file)
+            self.cfg_parser.write(file)
         return

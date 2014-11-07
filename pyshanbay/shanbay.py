@@ -11,7 +11,7 @@ import json
 
 
 class VisitShanbay:
-    def __init__(self):
+    def __init__(self, username, password):
         self.base_url = 'http://www.shanbay.com'
         self.headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -26,8 +26,8 @@ class VisitShanbay:
         self.cookie_processor = request.HTTPCookieProcessor(self.cookie)
         self.opener = request.build_opener(self.cookie_processor)
         self.csfrtoken = ''
-        self.username = 'ibluecoffee'
-        self.password = '870625@shanbay'
+        self.username = username
+        self.password = password
         self.userid = ''
         return
 
@@ -105,12 +105,17 @@ class VisitShanbay:
         req = request.Request(url=self.base_url, headers=self.headers)
         response = self.opener.open(req)
         time_str = response.headers.get('date')
-        now = datetime.datetime.strptime(time_str, '%a, %d %b %Y %H:%M:%S GMT')
+        date_utc = datetime.datetime.strptime(time_str, '%a, %d %b %Y %H:%M:%S GMT')
+        now = date_utc + datetime.timedelta(hours=8)
         return now
 
     def send_message(self, recipient_list, subject, message_text):
         url_sendmsg = urljoin(self.base_url, '/message/compose/')
-        recipient = ','.join(recipient_list)
+
+        if isinstance(recipient_list, (list, tuple)):
+            recipient = ','.join(recipient_list)
+        else:
+            recipient = recipient_list
         post_data_origin = {
             'csrfmiddlewaretoken': self.csfrtoken,
             'recipient': recipient,
@@ -138,7 +143,6 @@ class VisitShanbay:
             'action': 'dismiss',
             'ids': user_ids
         }
-        print(post_data_origin)
         post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
         req = request.Request(url=url_dismiss, data=post_data, headers=headers)
         req.get_method = lambda: 'PUT'

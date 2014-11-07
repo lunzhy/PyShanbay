@@ -12,12 +12,14 @@ import datetime
 
 
 class MainWidget(UIMainWidget):
-    def __init__(self):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
         self.set_widget_property()
         self.tb_members_data = []
         # login shanbay
-        self.shanbay = VisitShanbay()
+        self.shanbay = VisitShanbay(self.config.cfg_parser['Global']['username'],
+                                    self.config.cfg_parser['Global']['password'])
         self.shanbay.login()
         self.team = Team()
 
@@ -30,12 +32,19 @@ class MainWidget(UIMainWidget):
 
     def set_widget_property(self):
         # set the tables
-        self.tb_members.setColumnCount(2)
+        self.tb_members.setColumnCount(5)  # login-id, rank, checked_today&yesterday, rate, nickname
         self.tb_members.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_members.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.tb_members.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.tb_members.setHorizontalHeaderLabels(['小组成员', '今日打卡'])
+        self.tb_members.verticalHeader().setVisible(False)
+        self.tb_members.setColumnHidden(0, True)
+        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡率', '昵称'])
+        self.tb_members.setSortingEnabled(True)
+        self.tb_members.setColumnWidth(1, 33)
+        self.tb_members.setColumnWidth(2, 33)
+        self.tb_members.setColumnWidth(3, 45)
+        self.tb_members.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
 
         self.tb_recent_words.setRowCount(2)
         self.tb_recent_words.setColumnCount(7)
@@ -43,6 +52,13 @@ class MainWidget(UIMainWidget):
         self.tb_recent_words.setHorizontalHeaderLabels(['00-00'] * 7)
         self.tb_recent_words.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_recent_words.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        for i in range(7):
+            self.tb_recent_words.setColumnWidth(i, 42)
+        for i in range(2):
+            self.tb_recent_words.setRowHeight(i, 27)
+        self.tb_recent_words.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+
 
         self.tb_recent_checkin.setRowCount(2)
         self.tb_recent_checkin.setColumnCount(7)
@@ -50,17 +66,27 @@ class MainWidget(UIMainWidget):
         self.tb_recent_checkin.setHorizontalHeaderLabels(['00-00'] * 7)
         self.tb_recent_checkin.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_recent_checkin.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        for i in range(7):
+            self.tb_recent_checkin.setColumnWidth(i, 42)
+        for i in range(2):
+            self.tb_recent_checkin.setRowHeight(i, 27)
+        self.tb_recent_checkin.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.tb_recent_checkin.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+
+        self.textEdit_msg.insertPlainText('The first line is the subject of the message.')
 
         # set the signals and slots
         self.tb_members.itemSelectionChanged.connect(self.selected_member)
         self.tb_members.itemSelectionChanged.connect(self.clear_table_data)
-        self.btn_refresh.clicked.connect(self.set_data_members)
-        self.btn_recent_words.clicked.connect(self.set_recent_words)
-        self.btn_recent_checkin.clicked.connect(self.set_recent_checkin)
+        self.btn_refresh.clicked.connect(self.do_set_data_members)
+        self.btn_recent_words.clicked.connect(self.do_set_recent_words)
+        self.btn_recent_checkin.clicked.connect(self.do_set_recent_checkin)
+        self.btn_kickout.clicked.connect(self.do_kickout_member)
+        self.btn_send_msg.clicked.connect(self.do_send_message)
         return None
 
-    def set_data_members(self):
-        datetime_str = self.shanbay.get_server_time().strftime('%m-%d %H:%M')
+    def do_set_data_members(self):
+        datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
         self.label_refresh_time.setText(text_time)
 
@@ -68,23 +94,39 @@ class MainWidget(UIMainWidget):
         self.tb_members.setRowCount(len(self.tb_members_data))
 
         for row_index, member in enumerate(self.tb_members_data):
-            new_item = QtGui.QTableWidgetItem(member['nickname'])
+            new_item = QtGui.QTableWidgetItem(member['login_id'])
             self.tb_members.setItem(row_index, 0, new_item)
-            new_item = QtGui.QTableWidgetItem(str(member['checkin_today']))
+
+            new_item = QtGui.QTableWidgetItem()
+            new_item.setData(QtCore.Qt.EditRole, int(member['rank']))
             self.tb_members.setItem(row_index, 1, new_item)
+
+            today = 'O' if member['checkin_today'] is True else 'X'
+            yesterday = 'O' if member['checkin_yesterday'] is True else 'X'
+            check_text = '%s-%s' % (today, yesterday)
+            new_item = QtGui.QTableWidgetItem(check_text)
+            self.tb_members.setItem(row_index, 2, new_item)
+
+            new_item = QtGui.QTableWidgetItem()
+            rate = float(member['rate'].strip('%'))
+            new_item.setData(QtCore.Qt.EditRole, rate)
+            self.tb_members.setItem(row_index, 3, new_item)
+
+            new_item = QtGui.QTableWidgetItem(str(member['nickname']))
+            self.tb_members.setItem(row_index, 4, new_item)
         self.tb_members.selectRow(0)
+        self.tb_members.sortByColumn(1, QtCore.Qt.AscendingOrder)
         return None
 
     def selected_member(self):
-        select = self.tb_members.selectionModel().selectedRows()
-        row = select[0].row()
-        member = self.tb_members_data[row]
+        login_id, row = self._get_selected_loginid()
+        member = self.team.member(login_id)
         self.text_nickname.setText(member['nickname'])
         checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
                                '已打卡' if member['checkin_yesterday'] else '未打卡')
         self.text_checkin.setText(checkin)
         self.text_days.setText(member['days'])
-        self.text_rank.setText(str(row + 1))
+        self.text_rank.setText(str(member['rank']))
         self.text_points.setText(member['points'])
         self.text_rates.setText(member['rate'])
         return None
@@ -102,18 +144,22 @@ class MainWidget(UIMainWidget):
 
         members_info = parser.parse_members_manage(pages)
         self.team.load(members_info)
-        self.tb_members_data = self.team.sort(keyword='points')
+        self.tb_members_data = self.team.rank_points()
         return None
 
     def _get_selected_loginid(self):
         select = self.tb_members.selectionModel().selectedRows()
-        row = select[0].row()
-        member = self.tb_members_data[row]
-        login_id = member['login_id']
-        return login_id
+        try:
+            row = select[0].row()
+            login_id = self.tb_members.item(row, 0).text()
+        except IndexError:
+            return False
+        return login_id, row
 
-    def set_recent_words(self):
-        login_id = self._get_selected_loginid()
+    def do_set_recent_words(self):
+        login_id, row = self._get_selected_loginid()
+        if login_id is False:
+            return None
         page_progress = self.shanbay.get_progress(login_id)
         nums_recent, revieweds_recent = parser.parse_recent_progress(page_progress)
 
@@ -131,8 +177,11 @@ class MainWidget(UIMainWidget):
             self.tb_recent_words.setItem(1, col_index, new_item)
         return None
 
-    def set_recent_checkin(self):
-        page_checkin = self.shanbay.get_checkin(self._get_selected_loginid())
+    def do_set_recent_checkin(self):
+        login_id, row = self._get_selected_loginid()
+        if login_id is False:
+            return None
+        page_checkin = self.shanbay.get_checkin(login_id)
         checkin_recent = parser.paser_checkin(page_checkin)
 
         checkin_dict = {}
@@ -173,6 +222,74 @@ class MainWidget(UIMainWidget):
         self.tb_recent_checkin.clearContents()
         self.tb_recent_words.clearContents()
         return
+
+    def do_kickout_member(self):
+        login_id, row = self._get_selected_loginid()
+        if login_id is False:
+            return None
+        member = self.team.member(login_id)
+
+        if self.chb_kickout_msg.isChecked():
+            msg = self.textEdit_msg.toPlainText()
+            lines = msg.split('\n')
+            try:
+                subject = lines[0]
+            except IndexError:
+                subject = 'no subject'
+            try:
+                content = lines[1]
+            except IndexError:
+                content = 'no content'
+            info = 'Are you sure to kick %s ?\n\n' \
+                   'subject: %s\n' \
+                   'content: %s' % (member['nickname'], subject, content)
+        else:
+            info = 'Are you sure to kick %s ?\n\n' \
+                   'no message to send' % member['nickname']
+
+        reply = QtGui.QMessageBox.question(self, 'Message', info,
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                           QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.Yes:
+            data_id = member['data_id']
+
+            if self.chb_kickout_msg.isChecked():
+                recipient = member['username']
+                self.shanbay.send_message(recipient, subject, content)
+
+            self.tb_members.setRowHidden(row, True)
+            self.shanbay.dismiss_member(data_id)
+        return
+
+    def do_send_message(self):
+        login_id, row = self._get_selected_loginid()
+        if login_id is False:
+            return None
+        member = self.team.member(login_id)
+
+        msg = self.textEdit_msg.toPlainText()
+        lines = msg.split('\n')
+        try:
+            subject = lines[0]
+        except IndexError:
+            subject = 'no subject'
+        try:
+            content = lines[1]
+        except IndexError:
+            content = 'no content'
+
+        info = 'Are you sure to send message to %s ?\n\n' \
+               'subject: %s\n' \
+               'content: %s' % (member['nickname'], subject, content)
+
+        reply = QtGui.QMessageBox.question(self, 'Message', info,
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                           QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.Yes:
+            recipient = member['username']
+            self.shanbay.send_message(recipient, subject, content)
+        return
+
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
