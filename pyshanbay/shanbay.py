@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 from urllib.parse import urljoin
 from urllib import request
 import datetime
+import json
 
 
 class VisitShanbay:
@@ -85,15 +86,15 @@ class VisitShanbay:
         page_html = response.read()
         return page_html
 
-    def get_progress(self, userid):
-        url_progress = urljoin(self.base_url, '/api/v1/bdc/stats/%s/?progress' % userid)
+    def get_progress(self, login_id):
+        url_progress = urljoin(self.base_url, '/api/v1/bdc/stats/%s/?progress' % login_id)
         req = request.Request(url=url_progress, headers=self.headers)
         response = self.opener.open(req)
         page_html = response.read()
         return page_html
 
-    def get_checkin(self, userid):
-        url_checkin = urljoin(self.base_url, '/checkin/user/%s/' % userid)
+    def get_checkin(self, login_id):
+        url_checkin = urljoin(self.base_url, '/checkin/user/%s/' % login_id)
         req = request.Request(url=url_checkin, headers=self.headers)
         response = self.opener.open(req)
         page_html = response.read()
@@ -121,28 +122,42 @@ class VisitShanbay:
         response = self.opener.open(req)
         return response.status == 200
 
-    def dismiss_member(self, userid_list):
+    def dismiss_member(self, dataid_list):
         url_dismiss = urljoin(self.base_url, '/api/v1/team/member/')
         headers = copy.deepcopy(self.headers)
         headers.update(
-            {'X-Requested-With': 'XMLHttpRequest'}
+            {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+             'X-Requested-With': 'XMLHttpRequest'}
         )
 
-        if isinstance(userid_list, (list, tuple)):
-            user_ids = ','.join(map(str, userid_list))
+        if isinstance(dataid_list, (list, tuple)):
+            user_ids = ','.join(map(str, dataid_list))
         else:
-            user_ids = userid_list
+            user_ids = dataid_list
         post_data_origin = {
             'action': 'dismiss',
             'ids': user_ids
         }
+        print(post_data_origin)
         post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
         req = request.Request(url=url_dismiss, data=post_data, headers=headers)
+        req.get_method = lambda: 'PUT'
         response = self.opener.open(req)
-        return response.status == 200
-        return
+        content = response.read()
+        ret = json.loads(content.decode('utf-8'))['status_code']
+        # problem: whether the member is in the team or not, status_code 0 is returned
+        return ret == 0
+
+    def members_manage_page(self, page_number=1):
+        url_page = urljoin(self.base_url, '/team/manage/?page=%s' % page_number)
+        req = request.Request(url=url_page, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
+    # print(shanbay.dismiss_member([590287]))
 

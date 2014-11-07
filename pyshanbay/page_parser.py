@@ -7,6 +7,7 @@ import datetime
 _Chinese_number = {'一': '1', '二': '2', '三': '3', '四': '4', '五': '5', '六': '6',
                    '七': '7', '八': '8', '九': '9', '十': '10', '十一': '11', '十二': '12'}
 
+
 def _get_number_out(href):
     patt = re.compile(r'\d+')
     match = patt.search(href)
@@ -62,7 +63,7 @@ def parse_members_info(pages):
 
             username = td_infos[0].find_all('img')[0].get('alt')
             nickname = td_infos[0].find_all('a', {'class': 'nickname'})[0].get_text()
-            userid = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
+            login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
                 'href'))
 
             points = td_infos[1].get_text()
@@ -76,7 +77,7 @@ def parse_members_info(pages):
             member = {
                 'username': username,
                 'nickname': nickname,
-                'userid': userid,
+                'login_id': login_id,
                 'points': points,
                 'days': days,
                 'rate': rate,
@@ -128,4 +129,43 @@ def paser_checkin(checkin_page):
         checkin = {'words': word, 'reads': read}
         date_checkin = [date, checkin]
         checkin_list.append(date_checkin)
+
     return checkin_list
+
+
+def parse_members_manage(pages):
+    members = []
+    for page in pages:
+        soup = BeautifulSoup(page)
+        soup.prettify()
+        tr_members = soup.find_all('tr', {'class': 'member'})
+        for tr in tr_members:
+            # a new data-id is assigned to member when he joins the team
+            data_id = tr.get('data-id')
+            username = tr.get('data-name')
+
+            td_infos = tr.find_all('td')
+            nickname = td_infos[0].find_all('a', {'class': 'nickname'})[0].get_text().strip()
+            login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
+                'href')).strip()
+            points = td_infos[1].get_text().strip()
+            days = _get_number_out(td_infos[2].get_text()).strip()
+            rate = td_infos[3].get_text().strip()
+            checkin_today = True if 'label-success' in td_infos[4].find_all('span')[0].get(
+                'class') else False
+            checkin_yesterday = True if 'label-success' in td_infos[5].find_all('span')[0].get(
+                'class') else False
+
+            member = {
+                'login_id': login_id,
+                'username': username,
+                'nickname': nickname,
+                'data_id': data_id,
+                'points': points,
+                'days': days,
+                'rate': rate,
+                'checkin_today': checkin_today,
+                'checkin_yesterday': checkin_yesterday
+            }
+            members.append(member)
+    return members

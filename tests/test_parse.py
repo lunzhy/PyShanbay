@@ -46,10 +46,16 @@ def test():
     shanbay = VisitShanbay()
     shanbay.login()
 
+    page = shanbay.members_manage_page()
+    total_page = parser.total_page_members(page)
+    print(total_page)
+
+    members = parser.parse_members_manage([page])
+    print(members)
     # page = shanbay.get_progress('6684706')
     # today = parser.parse_today_progress(page)
     # print(today)
 
-    page = shanbay.get_checkin('5537146')
-    parser.paser_checkin(page)
+    #page = shanbay.get_checkin('5537146')
+    #parser.paser_checkin(page)
     return

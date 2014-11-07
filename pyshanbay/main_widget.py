@@ -7,6 +7,7 @@ from PyQt4 import QtCore
 from gui.ui_main import UIMainWidget
 from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
+from pyshanbay.team import Team
 import datetime
 
 
@@ -14,11 +15,11 @@ class MainWidget(UIMainWidget):
     def __init__(self):
         super().__init__()
         self.set_widget_property()
-        self.members_data = []
+        self.tb_members_data = []
         # login shanbay
         self.shanbay = VisitShanbay()
         self.shanbay.login()
-        return None
+        self.team = Team()
 
 
     @staticmethod
@@ -64,12 +65,12 @@ class MainWidget(UIMainWidget):
         self.label_refresh_time.setText(text_time)
 
         self.refresh_members_data()
-        self.tb_members.setRowCount(len(self.members_data))
+        self.tb_members.setRowCount(len(self.tb_members_data))
 
-        for row_index, member in enumerate(self.members_data):
+        for row_index, member in enumerate(self.tb_members_data):
             new_item = QtGui.QTableWidgetItem(member['nickname'])
             self.tb_members.setItem(row_index, 0, new_item)
-            new_item = QtGui.QTableWidgetItem(str(member['checked_today']))
+            new_item = QtGui.QTableWidgetItem(str(member['checkin_today']))
             self.tb_members.setItem(row_index, 1, new_item)
         self.tb_members.selectRow(0)
         return None
@@ -77,9 +78,11 @@ class MainWidget(UIMainWidget):
     def selected_member(self):
         select = self.tb_members.selectionModel().selectedRows()
         row = select[0].row()
-        member = self.members_data[row]
+        member = self.tb_members_data[row]
         self.text_nickname.setText(member['nickname'])
-        self.text_checkin.setText('已打卡' if member['checked_today'] else '未打卡')
+        checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
+                               '已打卡' if member['checkin_yesterday'] else '未打卡')
+        self.text_checkin.setText(checkin)
         self.text_days.setText(member['days'])
         self.text_rank.setText(str(row + 1))
         self.text_points.setText(member['points'])
@@ -88,29 +91,30 @@ class MainWidget(UIMainWidget):
 
     def refresh_members_data(self):
         # get total page number of members
-        main_page_members = self.shanbay.members()
+        main_page_members = self.shanbay.members_manage_page()
         total_page = parser.total_page_members(main_page_members)
 
         # get members info
         pages = []
         for page in range(1, int(total_page) + 1):
-            page_html = self.shanbay.members_page(page)
+            page_html = self.shanbay.members_manage_page(page)
             pages.append(page_html)
 
-        members_info = parser.parse_members_info(pages)
-        self.members_data = members_info
+        members_info = parser.parse_members_manage(pages)
+        self.team.load(members_info)
+        self.tb_members_data = self.team.sort(keyword='points')
         return None
 
-    def _get_selected_userid(self):
+    def _get_selected_loginid(self):
         select = self.tb_members.selectionModel().selectedRows()
         row = select[0].row()
-        member = self.members_data[row]
-        userid = member['userid']
-        return userid
+        member = self.tb_members_data[row]
+        login_id = member['login_id']
+        return login_id
 
     def set_recent_words(self):
-        userid = self._get_selected_userid()
-        page_progress = self.shanbay.get_progress(userid)
+        login_id = self._get_selected_loginid()
+        page_progress = self.shanbay.get_progress(login_id)
         nums_recent, revieweds_recent = parser.parse_recent_progress(page_progress)
 
         days = [recent[0] for recent in nums_recent]
@@ -128,7 +132,7 @@ class MainWidget(UIMainWidget):
         return None
 
     def set_recent_checkin(self):
-        page_checkin = self.shanbay.get_checkin(self._get_selected_userid())
+        page_checkin = self.shanbay.get_checkin(self._get_selected_loginid())
         checkin_recent = parser.paser_checkin(page_checkin)
 
         checkin_dict = {}
