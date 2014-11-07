@@ -23,7 +23,6 @@ class MainWidget(UIMainWidget):
         self.shanbay.login()
         self.team = Team(self.shanbay)
 
-
     @staticmethod
     def _change_date_style(origin_str):
         date = datetime.datetime.strptime(origin_str, '%Y-%m-%d')
@@ -89,7 +88,7 @@ class MainWidget(UIMainWidget):
 
     def set_data_members(self, members_data):
         self.tb_members.setRowCount(len(members_data))
-
+        self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
         for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
             self.tb_members.setItem(row_index, 0, new_item)
@@ -114,6 +113,7 @@ class MainWidget(UIMainWidget):
 
         # self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         # bug: sorting the items will lead to blank rows
+        self.tb_members.itemSelectionChanged.connect(self.selected_member)
         return None
 
     def selected_member(self):
@@ -213,7 +213,6 @@ class MainWidget(UIMainWidget):
         for day_inc in range(7):
             day = today + datetime.timedelta(days=-day_inc)
             days_show.append(day.strftime('%m-%d'))
-
 
         words, reads = [], []
         for index, day in enumerate(days_show):
@@ -320,8 +319,10 @@ class MainWidget(UIMainWidget):
         text = self.edit_search.text().strip()
         if not len(text) is 0:
             search_result = self.team.search(str(text))
+            self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
             for i in range(self.tb_members.rowCount()):
                 self.tb_members.removeRow(i)
+            self.tb_members.itemSelectionChanged.connect(self.selected_member)
             self.set_data_members(search_result)
             self.clear_text()
             self.tb_members.selectRow(0)

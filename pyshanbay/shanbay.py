@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 from urllib import request
 import datetime
 import json
+from pyshanbay.utils import ShanbayConnectException
 
 
 class VisitShanbay:
@@ -68,6 +69,7 @@ class VisitShanbay:
                 self.csfrtoken = ck.value
 
         if self.userid is '':
+            raise ShanbayConnectException
             print('login error.')
         return
 
