@@ -9,7 +9,6 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
-from pyshanbay.utils import clickable
 
 
 class MainWidget(UIMainWidget):
@@ -17,7 +16,7 @@ class MainWidget(UIMainWidget):
         super().__init__()
         self.config = config
         self.set_widget_property()
-        self.tb_members_data = []
+        self.data_tb_members = []
         # login shanbay
         self.shanbay = VisitShanbay(self.config.cfg_parser['Global']['username'],
                                     self.config.cfg_parser['Global']['password'])
@@ -79,26 +78,19 @@ class MainWidget(UIMainWidget):
         # set the signals and slots
         self.tb_members.itemSelectionChanged.connect(self.selected_member)
         self.tb_members.itemSelectionChanged.connect(self.clear_table_data)
-        self.btn_refresh.clicked.connect(self.do_set_data_members)
+        self.btn_refresh.clicked.connect(self.do_refresh_members)
         self.btn_recent_words.clicked.connect(self.do_set_recent_words)
         self.btn_recent_checkin.clicked.connect(self.do_set_recent_checkin)
         self.btn_kickout.clicked.connect(self.do_kickout_member)
         self.btn_send_msg.clicked.connect(self.do_send_message)
-        # self.btn_open_home.mousePressEvent.connect(self.do_open_home)
-        # self.connet(self.btn_open_home, QtCore.SIGNAL('clicked()'), self.btn_open_home)
-        # clickable(self.btn_open_home).connet(self.btn_open_home)
-        self.btn_open_home.mousePressEvent = self.btn_open_home
+        self.btn_open_home.mousePressEvent = self.do_open_home
+        self.edit_search.textChanged.connect(self.do_search)
         return None
 
-    def do_set_data_members(self):
-        datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
-        text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
-        self.label_refresh_time.setText(text_time)
+    def set_data_members(self, members_data):
+        self.tb_members.setRowCount(len(members_data))
 
-        self.refresh_members_data()
-        self.tb_members.setRowCount(len(self.tb_members_data))
-
-        for row_index, member in enumerate(self.tb_members_data):
+        for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
             self.tb_members.setItem(row_index, 0, new_item)
 
@@ -119,28 +111,37 @@ class MainWidget(UIMainWidget):
 
             new_item = QtGui.QTableWidgetItem(str(member['nickname']))
             self.tb_members.setItem(row_index, 4, new_item)
-        self.tb_members.selectRow(0)
-        self.tb_members.sortByColumn(1, QtCore.Qt.AscendingOrder)
+
+        # self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
+        # bug: sorting the items will lead to blank rows
         return None
 
     def selected_member(self):
-        login_id, row = self._get_selected_loginid()
-        member = self.team.member(login_id)
-        self.text_nickname.setText(member['nickname'])
-        checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
-                               '已打卡' if member['checkin_yesterday'] else '未打卡')
-        self.text_checkin.setText(checkin)
-        self.text_days.setText(member['days'])
-        self.text_rank.setText(str(member['rank']))
-        self.text_points.setText(member['points'])
-        self.text_rates.setText(member['rate'])
-        try:
-            self.text_checkins.setText(member['checkins'])
-        except KeyError:
-            pass
+        ret = self._get_selected_loginid()
+        if ret is False:
+            self.clear_text()
+        else:
+            (login_id, row) = ret
+            member = self.team.member(login_id)
+            self.text_nickname.setText(member['nickname'])
+            checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
+                                   '已打卡' if member['checkin_yesterday'] else '未打卡')
+            self.text_checkin.setText(checkin)
+            self.text_days.setText(member['days'])
+            self.text_rank.setText(str(member['rank']))
+            self.text_points.setText(member['points'])
+            self.text_rates.setText(member['rate'])
+            try:
+                self.text_checkins.setText(member['checkins'])
+            except KeyError:
+                pass
         return None
 
-    def refresh_members_data(self):
+    def do_refresh_members(self):
+        datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
+        text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
+        self.label_refresh_time.setText(text_time)
+
         # get total page number of members
         main_page_members = self.shanbay.members_manage_page()
         total_page = parser.total_page_members(main_page_members)
@@ -154,10 +155,13 @@ class MainWidget(UIMainWidget):
         members_info = parser.parse_members_manage(pages)
         self.team.load(members_info)
 
-        if self.config.cfg_parser['data'].getboolean('total_checkin') is True:
+        if self.config.cfg_parser['Data'].getboolean('total_checkin') is True:
             self.team.add_total_checkins()
 
-        self.tb_members_data = self.team.rank_points()
+        self.data_tb_members = self.team.rank_points()
+
+        self.set_data_members(self.data_tb_members)
+        self.tb_members.selectRow(0)
         return None
 
     def _get_selected_loginid(self):
@@ -303,14 +307,40 @@ class MainWidget(UIMainWidget):
             self.shanbay.send_message(recipient, subject, content)
         return
 
-    def do_open_home(self):
+    def do_open_home(self, ev):
         login_id, row = self._get_selected_loginid()
         if login_id is False:
             return None
-        member = self.team.member(login_id)
+        home = self.team.member_home(login_id)
         import webbrowser
-        webbrowser.open(member)
+        webbrowser.open(home)
         return None
+
+    def do_search(self):
+        text = self.edit_search.text().strip()
+        if not len(text) is 0:
+            search_result = self.team.search(str(text))
+            for i in range(self.tb_members.rowCount()):
+                self.tb_members.removeRow(i)
+            self.set_data_members(search_result)
+            self.clear_text()
+            self.tb_members.selectRow(0)
+        else:
+            self.tb_members.clearContents()
+            self.set_data_members(self.data_tb_members)
+            self.tb_members.selectRow(0)
+        return None
+
+
+    def clear_text(self):
+        self.text_nickname.setText('N/A')
+        self.text_checkin.setText('N/A')
+        self.text_days.setText('N/A')
+        self.text_rank.setText('N/A')
+        self.text_points.setText('N/A')
+        self.text_rates.setText('N/A')
+        self.text_checkins.setText('N/A')
+        pass
 
 
 if __name__ == '__main__':

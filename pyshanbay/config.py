@@ -20,8 +20,8 @@ class ShanbayConfig:
         section['username'] = 'username'
         section['password'] = 'password'
 
-        self.cfg_parser.add_section('data')
-        section = self.cfg_parser['data']
+        self.cfg_parser.add_section('Data')
+        section = self.cfg_parser['Data']
         section['total_checkin'] = 'no'
 
         with open(filename, 'w') as file:

@@ -29,17 +29,24 @@ class Team:
             self.members_dict[int(member['login_id'])].update(
                 {'rank': rank+1}
             )
-        return
+        return None
 
     def add_total_checkins(self):
-        print('add')
         for login_id, member in self.members_dict.items():
             page = self.shanbay.visit_member_home(login_id)
             checkins = parser.parse_total_checkin(page)
             member.update(
                 {'checkins': checkins}
             )
-        return
+        return None
 
     def member_home(self, login_id):
         return self.shanbay.get_member_home(login_id)
+
+    def search(self, keyword):
+        result = []
+        for login_id, member in self.members_dict.items():
+            if keyword in member['nickname']:
+                result.append(member)
+        result = sorted(result, key=lambda x: int(x['points']), reverse=True)
+        return result
