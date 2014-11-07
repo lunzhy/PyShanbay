@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*- 
 __author__ = 'Lunzhy'
-
+import pyshanbay.page_parser as parser
 
 class Team:
-    def __init__(self):
+    def __init__(self, shanbay):
         self.members_dict = {}
+        self.shanbay = shanbay
         return
 
     def load(self, members):
@@ -28,5 +29,17 @@ class Team:
             self.members_dict[int(member['login_id'])].update(
                 {'rank': rank+1}
             )
-
         return
+
+    def add_total_checkins(self):
+        print('add')
+        for login_id, member in self.members_dict.items():
+            page = self.shanbay.visit_member_home(login_id)
+            checkins = parser.parse_total_checkin(page)
+            member.update(
+                {'checkins': checkins}
+            )
+        return
+
+    def member_home(self, login_id):
+        return self.shanbay.get_member_home(login_id)

@@ -169,3 +169,12 @@ def parse_members_manage(pages):
             }
             members.append(member)
     return members
+
+
+def parse_total_checkin(page):
+    soup = BeautifulSoup(page)
+    soup.prettify()
+    ul = soup.find_all('ul', {'class': 'nav-stacked'})
+    checkins = ul[0].find_all('a')[1].get_text()
+    days = _get_number_out(checkins)
+    return days

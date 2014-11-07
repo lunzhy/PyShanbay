@@ -159,9 +159,21 @@ class VisitShanbay:
         page_html = response.read()
         return page_html
 
+    def visit_member_home(self, login_id):
+        # http://www.shanbay.com/bdc/review/progress/1929250
+        url_page = urljoin(self.base_url, '/bdc/review/progress/%s' % login_id)
+        req = request.Request(url=url_page, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
+    def get_member_home(self, login_id):
+        return urljoin(self.base_url, '/bdc/review/progress/%s' % login_id)
+
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
     # print(shanbay.dismiss_member([590287]))
+
 

@@ -9,6 +9,7 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
+from pyshanbay.utils import clickable
 
 
 class MainWidget(UIMainWidget):
@@ -21,7 +22,7 @@ class MainWidget(UIMainWidget):
         self.shanbay = VisitShanbay(self.config.cfg_parser['Global']['username'],
                                     self.config.cfg_parser['Global']['password'])
         self.shanbay.login()
-        self.team = Team()
+        self.team = Team(self.shanbay)
 
 
     @staticmethod
@@ -83,6 +84,10 @@ class MainWidget(UIMainWidget):
         self.btn_recent_checkin.clicked.connect(self.do_set_recent_checkin)
         self.btn_kickout.clicked.connect(self.do_kickout_member)
         self.btn_send_msg.clicked.connect(self.do_send_message)
+        # self.btn_open_home.mousePressEvent.connect(self.do_open_home)
+        # self.connet(self.btn_open_home, QtCore.SIGNAL('clicked()'), self.btn_open_home)
+        # clickable(self.btn_open_home).connet(self.btn_open_home)
+        self.btn_open_home.mousePressEvent = self.btn_open_home
         return None
 
     def do_set_data_members(self):
@@ -129,6 +134,10 @@ class MainWidget(UIMainWidget):
         self.text_rank.setText(str(member['rank']))
         self.text_points.setText(member['points'])
         self.text_rates.setText(member['rate'])
+        try:
+            self.text_checkins.setText(member['checkins'])
+        except KeyError:
+            pass
         return None
 
     def refresh_members_data(self):
@@ -144,6 +153,10 @@ class MainWidget(UIMainWidget):
 
         members_info = parser.parse_members_manage(pages)
         self.team.load(members_info)
+
+        if self.config.cfg_parser['data'].getboolean('total_checkin') is True:
+            self.team.add_total_checkins()
+
         self.tb_members_data = self.team.rank_points()
         return None
 
@@ -289,6 +302,15 @@ class MainWidget(UIMainWidget):
             recipient = member['username']
             self.shanbay.send_message(recipient, subject, content)
         return
+
+    def do_open_home(self):
+        login_id, row = self._get_selected_loginid()
+        if login_id is False:
+            return None
+        member = self.team.member(login_id)
+        import webbrowser
+        webbrowser.open(member)
+        return None
 
 
 if __name__ == '__main__':

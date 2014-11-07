@@ -19,6 +19,11 @@ class ShanbayConfig:
         section = self.cfg_parser['Global']
         section['username'] = 'username'
         section['password'] = 'password'
+
+        self.cfg_parser.add_section('data')
+        section = self.cfg_parser['data']
+        section['total_checkin'] = 'no'
+
         with open(filename, 'w') as file:
             self.cfg_parser.write(file)
         return
