@@ -23,7 +23,6 @@ class MainWidget(UIMainWidget):
         self.shanbay.login()
         self.team = Team(self.shanbay)
 
-
     @staticmethod
     def _change_date_style(origin_str):
         date = datetime.datetime.strptime(origin_str, '%Y-%m-%d')
@@ -39,7 +38,7 @@ class MainWidget(UIMainWidget):
         self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_members.verticalHeader().setVisible(False)
         self.tb_members.setColumnHidden(0, True)
-        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡率', '昵称'])
+        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡�, '昵称'])
         self.tb_members.setSortingEnabled(True)
         self.tb_members.setColumnWidth(1, 33)
         self.tb_members.setColumnWidth(2, 33)
@@ -89,7 +88,7 @@ class MainWidget(UIMainWidget):
 
     def set_data_members(self, members_data):
         self.tb_members.setRowCount(len(members_data))
-
+        self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
         for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
             self.tb_members.setItem(row_index, 0, new_item)
@@ -114,6 +113,7 @@ class MainWidget(UIMainWidget):
 
         # self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         # bug: sorting the items will lead to blank rows
+        self.tb_members.itemSelectionChanged.connect(self.selected_member)
         return None
 
     def selected_member(self):
@@ -124,8 +124,8 @@ class MainWidget(UIMainWidget):
             (login_id, row) = ret
             member = self.team.member(login_id)
             self.text_nickname.setText(member['nickname'])
-            checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
-                                   '已打卡' if member['checkin_yesterday'] else '未打卡')
+            checkin = '%s | %s' % ('已打� if member['checkin_today'] else '未打�,
+                                   '已打� if member['checkin_yesterday'] else '未打�)
             self.text_checkin.setText(checkin)
             self.text_days.setText(member['days'])
             self.text_rank.setText(str(member['rank']))
@@ -213,7 +213,6 @@ class MainWidget(UIMainWidget):
         for day_inc in range(7):
             day = today + datetime.timedelta(days=-day_inc)
             days_show.append(day.strftime('%m-%d'))
-
 
         words, reads = [], []
         for index, day in enumerate(days_show):
@@ -320,10 +319,12 @@ class MainWidget(UIMainWidget):
         text = self.edit_search.text().strip()
         if not len(text) is 0:
             search_result = self.team.search(str(text))
-            self.clear_text()
+            self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
             for i in range(self.tb_members.rowCount()):
                 self.tb_members.removeRow(i)
+            self.tb_members.itemSelectionChanged.connect(self.selected_member)
             self.set_data_members(search_result)
+            self.clear_text()
             self.tb_members.selectRow(0)
         else:
             self.tb_members.clearContents()
