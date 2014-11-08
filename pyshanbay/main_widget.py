@@ -320,10 +320,10 @@ class MainWidget(UIMainWidget):
         text = self.edit_search.text().strip()
         if not len(text) is 0:
             search_result = self.team.search(str(text))
+            self.clear_text()
             for i in range(self.tb_members.rowCount()):
                 self.tb_members.removeRow(i)
             self.set_data_members(search_result)
-            self.clear_text()
             self.tb_members.selectRow(0)
         else:
             self.tb_members.clearContents()
