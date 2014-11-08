@@ -50,3 +50,11 @@ class Team:
                 result.append(member)
         result = sorted(result, key=lambda x: int(x['points']), reverse=True)
         return result
+
+    def get_checkins(self, login_id):
+        page = self.shanbay.visit_member_home(login_id)
+        checkins = parser.parse_total_checkin(page)
+        self.members_dict[int(login_id)].update(
+            {'checkins': checkins}
+        )
+        return checkins

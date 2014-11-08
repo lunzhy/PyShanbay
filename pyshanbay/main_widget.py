@@ -60,16 +60,16 @@ class MainWidget(UIMainWidget):
         self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
 
 
-        self.tb_recent_checkin.setRowCount(2)
+        self.tb_recent_checkin.setRowCount(3)
         self.tb_recent_checkin.setColumnCount(7)
-        self.tb_recent_checkin.setVerticalHeaderLabels(['单词', '文章'])
+        self.tb_recent_checkin.setVerticalHeaderLabels(['单词', '文章', '句子'])
         self.tb_recent_checkin.setHorizontalHeaderLabels(['00-00'] * 7)
         self.tb_recent_checkin.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_recent_checkin.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
         for i in range(7):
             self.tb_recent_checkin.setColumnWidth(i, 42)
-        for i in range(2):
-            self.tb_recent_checkin.setRowHeight(i, 27)
+        for i in range(3):
+            self.tb_recent_checkin.setRowHeight(i, 28)
         self.tb_recent_checkin.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_recent_checkin.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
 
@@ -85,6 +85,7 @@ class MainWidget(UIMainWidget):
         self.btn_kickout.clicked.connect(self.do_kickout_member)
         self.btn_send_msg.clicked.connect(self.do_send_message)
         self.btn_open_home.mousePressEvent = self.do_open_home
+        self.label_total_checkin.mousePressEvent = self.do_click_checkins
         self.edit_search.textChanged.connect(self.do_search)
         return None
 
@@ -138,6 +139,7 @@ class MainWidget(UIMainWidget):
             try:
                 self.text_checkins.setText(member['checkins'])
             except KeyError:
+                self.text_checkins.setText('(N/A)')
                 pass
         return None
 
@@ -178,9 +180,10 @@ class MainWidget(UIMainWidget):
         return login_id, row
 
     def do_set_recent_words(self):
-        login_id, row = self._get_selected_loginid()
-        if login_id is False:
+        ret = self._get_selected_loginid()
+        if ret is False:
             return None
+        (login_id, row) = ret
         page_progress = self.shanbay.get_progress(login_id)
         nums_recent, revieweds_recent = parser.parse_recent_progress(page_progress)
 
@@ -199,9 +202,10 @@ class MainWidget(UIMainWidget):
         return None
 
     def do_set_recent_checkin(self):
-        login_id, row = self._get_selected_loginid()
-        if login_id is False:
+        ret = self._get_selected_loginid()
+        if ret is False:
             return None
+        (login_id, row) = ret
         page_checkin = self.shanbay.get_checkin(login_id)
         checkin_recent = parser.paser_checkin(page_checkin)
 
@@ -218,24 +222,29 @@ class MainWidget(UIMainWidget):
             day = today + datetime.timedelta(days=-day_inc)
             days_show.append(day.strftime('%m-%d'))
 
-        words, reads = [], []
+        words, reads, sents = [], [], []
         for index, day in enumerate(days_show):
             try:
                 word = checkin_dict[day]['words']
                 read = checkin_dict[day]['reads']
+                sent = checkin_dict[day]['sents']
             except KeyError:
                 word = 'N/A'
                 read = 'N/A'
+                sent = 'N/A'
             words.append(word)
             reads.append(read)
+            sents.append(sent)
 
         self.tb_recent_checkin.setHorizontalHeaderLabels(days_show)
 
-        for col_index, (word, read) in enumerate(zip(words, reads)):
+        for col_index, (word, read, sent) in enumerate(zip(words, reads, sents)):
             new_item = QtGui.QTableWidgetItem(str(word))
             self.tb_recent_checkin.setItem(0, col_index, new_item)
             new_item = QtGui.QTableWidgetItem(str(read))
             self.tb_recent_checkin.setItem(1, col_index, new_item)
+            new_item = QtGui.QTableWidgetItem(str(sent))
+            self.tb_recent_checkin.setItem(2, col_index, new_item)
         return None
 
     def clear_table_data(self):
@@ -244,9 +253,10 @@ class MainWidget(UIMainWidget):
         return
 
     def do_kickout_member(self):
-        login_id, row = self._get_selected_loginid()
-        if login_id is False:
+        ret = self._get_selected_loginid()
+        if ret is False:
             return None
+        (login_id, row) = ret
         member = self.team.member(login_id)
 
         if self.chb_kickout_msg.isChecked():
@@ -282,9 +292,10 @@ class MainWidget(UIMainWidget):
         return
 
     def do_send_message(self):
-        login_id, row = self._get_selected_loginid()
-        if login_id is False:
+        ret = self._get_selected_loginid()
+        if ret is False:
             return None
+        (login_id, row) = ret
         member = self.team.member(login_id)
 
         msg = self.textEdit_msg.toPlainText()
@@ -311,9 +322,10 @@ class MainWidget(UIMainWidget):
         return
 
     def do_open_home(self, ev):
-        login_id, row = self._get_selected_loginid()
-        if login_id is False:
+        ret = self._get_selected_loginid()
+        if ret is False:
             return None
+        (login_id, row) = ret
         home = self.team.member_home(login_id)
         import webbrowser
         webbrowser.open(home)
@@ -352,6 +364,14 @@ class MainWidget(UIMainWidget):
         self.tb_members.selectRow(-1)
         self.tb_members.selectRow(row)
 
+    def do_click_checkins(self, ev):
+        ret = self._get_selected_loginid()
+        if ret is False:
+            return None
+        (login_id, row) = ret
+        checkins = self.team.get_checkins(login_id)
+        self.text_checkins.setText(str(checkins))
+        return
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

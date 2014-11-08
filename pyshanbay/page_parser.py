@@ -119,14 +119,16 @@ def paser_checkin(checkin_page):
     notes, dates = notes[:7], dates[:7]  # only get 7 items
     words = [_regex_search(r'\d+(?= 个单词)', note) for note in notes]
     reads = [_regex_search(r'\d+(?= 篇文章)', note) for note in notes]
+    sents = [_regex_search(r'\d+(?= 个句子)', note) for note in notes]
 
     dates = [_parse_chinese_date(date) for date in dates]
     checkin_list = []
 
-    for date, word, read in zip(dates, words, reads):
+    for date, word, read, sent in zip(dates, words, reads, sents):
         word = 0 if word == '' else int(word)
         read = 0 if read == '' else int(read)
-        checkin = {'words': word, 'reads': read}
+        sent = 0 if sent == '' else int(sent)
+        checkin = {'words': word, 'reads': read, 'sents': sent}
         date_checkin = [date, checkin]
         checkin_list.append(date_checkin)
 
