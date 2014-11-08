@@ -77,6 +77,7 @@ class MainWidget(UIMainWidget):
 
         # set the signals and slots
         self.tb_members.itemSelectionChanged.connect(self.selected_member)
+        self.tb_members.itemClicked.connect(self.table_item_clicked)
         self.tb_members.itemSelectionChanged.connect(self.clear_table_data)
         self.btn_refresh.clicked.connect(self.do_refresh_members)
         self.btn_recent_words.clicked.connect(self.do_set_recent_words)
@@ -344,6 +345,12 @@ class MainWidget(UIMainWidget):
         self.text_rates.setText('N/A')
         self.text_checkins.setText('N/A')
         pass
+
+    def table_item_clicked(self, item):
+        # TODO: item selection and clicking status requires improvement.
+        row = item.row()
+        self.tb_members.selectRow(-1)
+        self.tb_members.selectRow(row)
 
 
 if __name__ == '__main__':
