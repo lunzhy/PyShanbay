@@ -38,7 +38,8 @@ class MainWidget(UIMainWidget):
         self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_members.verticalHeader().setVisible(False)
         self.tb_members.setColumnHidden(0, True)
-        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡�, '昵称'])
+
+        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡率', '昵称'])
         self.tb_members.setSortingEnabled(True)
         self.tb_members.setColumnWidth(1, 33)
         self.tb_members.setColumnWidth(2, 33)
@@ -87,8 +88,8 @@ class MainWidget(UIMainWidget):
         return None
 
     def set_data_members(self, members_data):
-        self.tb_members.setRowCount(len(members_data))
         self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
+        self.tb_members.setRowCount(len(members_data))
         for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
             self.tb_members.setItem(row_index, 0, new_item)
@@ -124,8 +125,10 @@ class MainWidget(UIMainWidget):
             (login_id, row) = ret
             member = self.team.member(login_id)
             self.text_nickname.setText(member['nickname'])
-            checkin = '%s | %s' % ('已打� if member['checkin_today'] else '未打�,
-                                   '已打� if member['checkin_yesterday'] else '未打�)
+
+            checkin = '%s | %s' % ('已打卡' if member['checkin_today'] else '未打卡',
+                                   '已打卡' if member['checkin_yesterday'] else '未打卡')
+
             self.text_checkin.setText(checkin)
             self.text_days.setText(member['days'])
             self.text_rank.setText(str(member['rank']))
@@ -331,7 +334,6 @@ class MainWidget(UIMainWidget):
             self.set_data_members(self.data_tb_members)
             self.tb_members.selectRow(0)
         return None
-
 
     def clear_text(self):
         self.text_nickname.setText('N/A')
