@@ -9,9 +9,19 @@ class Team:
         self.shanbay = shanbay
         return
 
-    def load(self, members):
-        self.members = members
-        for member in self.members:
+    def load(self):
+        # get total page number of members
+        main_page_members = self.shanbay.members_manage_page()
+        total_page = parser.total_page_members(main_page_members)
+
+        # get members info
+        pages = []
+        for page in range(1, int(total_page) + 1):
+            page_html = self.shanbay.members_manage_page(page)
+            pages.append(page_html)
+        members_info = parser.parse_members_manage(pages)
+
+        for member in members_info:
             self.members_dict[int(member['login_id'])] = member
         return None
 
@@ -58,3 +68,9 @@ class Team:
             {'checkins': checkins}
         )
         return checkins
+
+    def all_members(self):
+        return list(self.members_dict.values())
+
+    def kick_member(self, login_id):
+        self.members_dict.pop(int(login_id))

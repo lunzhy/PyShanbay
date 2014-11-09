@@ -16,7 +16,6 @@ class MainWidget(UIMainWidget):
         super().__init__()
         self.config = config
         self.set_widget_property()
-        self.data_tb_members = []
         # login shanbay
         self.shanbay = VisitShanbay(self.config.cfg_parser['Global']['username'],
                                     self.config.cfg_parser['Global']['password'])
@@ -79,7 +78,7 @@ class MainWidget(UIMainWidget):
         # set the signals and slots
         self.tb_members.itemSelectionChanged.connect(self.selected_member)
         self.tb_members.itemClicked.connect(self.table_item_clicked)
-        self.tb_members.itemSelectionChanged.connect(self.clear_table_data)
+        self.tb_members.itemSelectionChanged.connect(self.clear_table_recent)
         self.btn_refresh.clicked.connect(self.do_refresh_members)
         self.btn_recent_words.clicked.connect(self.do_set_recent_words)
         self.btn_recent_checkin.clicked.connect(self.do_set_recent_checkin)
@@ -91,7 +90,9 @@ class MainWidget(UIMainWidget):
         return None
 
     def set_data_members(self, members_data):
-        self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
+        self.tb_members.setSortingEnabled(False)
+        # sorting will conflict with the method of setting table item
+        # self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
         self.tb_members.setRowCount(len(members_data))
         for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
@@ -115,15 +116,14 @@ class MainWidget(UIMainWidget):
             new_item = QtGui.QTableWidgetItem(str(member['nickname']))
             self.tb_members.setItem(row_index, 4, new_item)
 
-        # self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         # bug: sorting the items will lead to blank rows
-        self.tb_members.itemSelectionChanged.connect(self.selected_member)
+        self.tb_members.setSortingEnabled(True)
         return None
 
     def selected_member(self):
         ret = self._get_selected_loginid()
         if ret is False:
-            self.clear_text()
+            self.clear_info_text()
         else:
             (login_id, row) = ret
             member = self.team.member(login_id)
@@ -145,29 +145,20 @@ class MainWidget(UIMainWidget):
         return None
 
     def do_refresh_members(self):
+        self.tb_members.clearContents()
+        self.edit_search.clear()
         datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
         self.label_refresh_time.setText(text_time)
 
-        # get total page number of members
-        main_page_members = self.shanbay.members_manage_page()
-        total_page = parser.total_page_members(main_page_members)
-
-        # get members info
-        pages = []
-        for page in range(1, int(total_page) + 1):
-            page_html = self.shanbay.members_manage_page(page)
-            pages.append(page_html)
-
-        members_info = parser.parse_members_manage(pages)
-        self.team.load(members_info)
+        self.team.load()
 
         if self.config.cfg_parser['Data'].getboolean('total_checkin') is True:
             self.team.add_total_checkins()
 
-        self.data_tb_members = self.team.rank_points()
-
-        self.set_data_members(self.data_tb_members)
+        self.set_data_members(self.team.rank_points())
+        self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
+        self.tb_members.clearSelection()
         self.tb_members.selectRow(0)
         return None
 
@@ -248,7 +239,7 @@ class MainWidget(UIMainWidget):
             self.tb_recent_checkin.setItem(2, col_index, new_item)
         return None
 
-    def clear_table_data(self):
+    def clear_table_recent(self):
         self.tb_recent_checkin.clearContents()
         self.tb_recent_words.clearContents()
         return
@@ -288,6 +279,7 @@ class MainWidget(UIMainWidget):
                 recipient = member['username']
                 self.shanbay.send_message(recipient, subject, content)
 
+            self.team.kick_member(login_id)
             self.tb_members.setRowHidden(row, True)
             self.shanbay.dismiss_member(data_id)
         return
@@ -336,20 +328,20 @@ class MainWidget(UIMainWidget):
         text = self.edit_search.text().strip()
         if not len(text) is 0:
             search_result = self.team.search(str(text))
-            self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
-            for i in range(self.tb_members.rowCount()):
-                self.tb_members.removeRow(i)
-            self.tb_members.itemSelectionChanged.connect(self.selected_member)
+
+            self.tb_members.clearContents()
             self.set_data_members(search_result)
-            self.clear_text()
+            self.clear_info_text()
+            self.tb_members.clearSelection()
             self.tb_members.selectRow(0)
         else:
             self.tb_members.clearContents()
-            self.set_data_members(self.data_tb_members)
+            self.set_data_members(self.team.all_members())
+            self.tb_members.clearSelection()
             self.tb_members.selectRow(0)
         return None
 
-    def clear_text(self):
+    def clear_info_text(self):
         self.text_nickname.setText('N/A')
         self.text_checkin.setText('N/A')
         self.text_days.setText('N/A')
