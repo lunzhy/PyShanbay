@@ -15,7 +15,9 @@ except AttributeError:
 class UIMainWidget(QtGui.QWidget):
     def __init__(self):
         super().__init__()
-        self.setup_ui()
+        # self.setup_ui()
+        self.setup_ui_stretch()
+        self.set_ui_text()
 
     def setup_ui(self):
         self.setObjectName(_fromUtf8("UIMainWidget"))
@@ -285,8 +287,6 @@ class UIMainWidget(QtGui.QWidget):
         spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
                                         QtGui.QSizePolicy.Minimum)
         self.gridLayout_3.addItem(spacerItem6, 0, 1, 1, 1)
-
-        self.set_ui_text()
         return None
 
     def set_ui_text(self):
@@ -328,7 +328,7 @@ class UIMainWidget(QtGui.QWidget):
         self.chb_kickout_group.setText("批量名单")
         return None
     
-    def tight_ui(self):
+    def setup_ui_stretch(self):
         self.setObjectName(_fromUtf8("UIMainWidget"))
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setEnabled(True)
@@ -341,9 +341,11 @@ class UIMainWidget(QtGui.QWidget):
         self.gridLayout_5 = QtGui.QGridLayout()
         self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
         self.cbb_team_condition = QtGui.QComboBox(self)
+        self.cbb_team_condition.setMaximumSize(QtCore.QSize(350, 16777215))
         self.cbb_team_condition.setObjectName(_fromUtf8("cbb_team_condition"))
         self.gridLayout_5.addWidget(self.cbb_team_condition, 2, 0, 1, 2)
         self.edit_search = QtGui.QLineEdit(self)
+        self.edit_search.setMaximumSize(QtCore.QSize(290, 16777215))
         self.edit_search.setObjectName(_fromUtf8("edit_search"))
         self.gridLayout_5.addWidget(self.edit_search, 0, 1, 1, 1)
         self.label_search = QtGui.QLabel(self)
@@ -352,6 +354,7 @@ class UIMainWidget(QtGui.QWidget):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_search.sizePolicy().hasHeightForWidth())
         self.label_search.setSizePolicy(sizePolicy)
+        self.label_search.setMaximumSize(QtCore.QSize(50, 16777215))
         self.label_search.setObjectName(_fromUtf8("label_search"))
         self.gridLayout_5.addWidget(self.label_search, 0, 0, 1, 1)
         self.tb_members = QtGui.QTableWidget(self)
@@ -360,6 +363,7 @@ class UIMainWidget(QtGui.QWidget):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tb_members.sizePolicy().hasHeightForWidth())
         self.tb_members.setSizePolicy(sizePolicy)
+        self.tb_members.setMaximumSize(QtCore.QSize(350, 16777215))
         self.tb_members.setSizeIncrement(QtCore.QSize(0, 0))
         self.tb_members.setFrameShape(QtGui.QFrame.NoFrame)
         self.tb_members.setObjectName(_fromUtf8("tb_members"))
@@ -439,6 +443,7 @@ class UIMainWidget(QtGui.QWidget):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_nickname.sizePolicy().hasHeightForWidth())
         self.label_nickname.setSizePolicy(sizePolicy)
+        self.label_nickname.setMinimumSize(QtCore.QSize(20, 20))
         self.label_nickname.setObjectName(_fromUtf8("label_nickname"))
         self.gridLayout.addWidget(self.label_nickname, 0, 0, 1, 1)
         self.text_rates = QtGui.QLabel(self)
@@ -448,6 +453,7 @@ class UIMainWidget(QtGui.QWidget):
         self.text_rank.setObjectName(_fromUtf8("text_rank"))
         self.gridLayout.addWidget(self.text_rank, 1, 3, 1, 1)
         self.label_rank = QtGui.QLabel(self)
+        self.label_rank.setMinimumSize(QtCore.QSize(20, 0))
         self.label_rank.setObjectName(_fromUtf8("label_rank"))
         self.gridLayout.addWidget(self.label_rank, 1, 2, 1, 1)
         self.label_checkin = QtGui.QLabel(self)
@@ -456,30 +462,36 @@ class UIMainWidget(QtGui.QWidget):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_checkin.sizePolicy().hasHeightForWidth())
         self.label_checkin.setSizePolicy(sizePolicy)
+        self.label_checkin.setMinimumSize(QtCore.QSize(20, 0))
         self.label_checkin.setObjectName(_fromUtf8("label_checkin"))
         self.gridLayout.addWidget(self.label_checkin, 0, 2, 1, 1)
         self.label_days = QtGui.QLabel(self)
+        self.label_days.setMinimumSize(QtCore.QSize(20, 20))
         self.label_days.setObjectName(_fromUtf8("label_days"))
         self.gridLayout.addWidget(self.label_days, 1, 0, 1, 1)
         self.text_nickname = QtGui.QLabel(self)
         self.text_nickname.setObjectName(_fromUtf8("text_nickname"))
         self.gridLayout.addWidget(self.text_nickname, 0, 1, 1, 1)
         self.label_rate = QtGui.QLabel(self)
+        self.label_rate.setMinimumSize(QtCore.QSize(20, 0))
         self.label_rate.setObjectName(_fromUtf8("label_rate"))
         self.gridLayout.addWidget(self.label_rate, 2, 2, 1, 1)
         self.text_checkins = QtGui.QLabel(self)
         self.text_checkins.setObjectName(_fromUtf8("text_checkins"))
         self.gridLayout.addWidget(self.text_checkins, 3, 1, 1, 1)
         self.label_total_checkin = QtGui.QLabel(self)
+        self.label_total_checkin.setMinimumSize(QtCore.QSize(20, 20))
         self.label_total_checkin.setObjectName(_fromUtf8("label_total_checkin"))
         self.gridLayout.addWidget(self.label_total_checkin, 3, 0, 1, 1)
         self.label_points = QtGui.QLabel(self)
+        self.label_points.setMinimumSize(QtCore.QSize(20, 20))
         self.label_points.setObjectName(_fromUtf8("label_points"))
         self.gridLayout.addWidget(self.label_points, 2, 0, 1, 1)
         self.text_days = QtGui.QLabel(self)
         self.text_days.setObjectName(_fromUtf8("text_days"))
         self.gridLayout.addWidget(self.text_days, 1, 1, 1, 1)
         self.btn_open_home = QtGui.QLabel(self)
+        self.btn_open_home.setMinimumSize(QtCore.QSize(20, 0))
         self.btn_open_home.setOpenExternalLinks(False)
         self.btn_open_home.setObjectName(_fromUtf8("btn_open_home"))
         self.gridLayout.addWidget(self.btn_open_home, 3, 2, 1, 1)

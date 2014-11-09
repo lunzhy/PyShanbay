@@ -35,7 +35,7 @@ class MainWidget(UIMainWidget):
         self.tb_members.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_members.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.tb_members.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        # self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_members.verticalHeader().setVisible(False)
         self.tb_members.setColumnHidden(0, True)
 
@@ -44,7 +44,8 @@ class MainWidget(UIMainWidget):
         self.tb_members.setColumnWidth(1, 33)
         self.tb_members.setColumnWidth(2, 33)
         self.tb_members.setColumnWidth(3, 45)
-        self.tb_members.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.tb_members.horizontalHeader().setStretchLastSection(True)
+        # self.tb_members.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         self.tb_recent_words.setRowCount(2)
         self.tb_recent_words.setColumnCount(7)
@@ -56,8 +57,8 @@ class MainWidget(UIMainWidget):
             self.tb_recent_words.setColumnWidth(i, 42)
         for i in range(2):
             self.tb_recent_words.setRowHeight(i, 27)
-        self.tb_recent_words.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.tb_recent_words.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
 
         self.tb_recent_checkin.setRowCount(3)
@@ -70,8 +71,8 @@ class MainWidget(UIMainWidget):
             self.tb_recent_checkin.setColumnWidth(i, 42)
         for i in range(3):
             self.tb_recent_checkin.setRowHeight(i, 28)
-        self.tb_recent_checkin.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.tb_recent_checkin.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.tb_recent_checkin.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.tb_recent_checkin.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         self.textEdit_msg.insertPlainText('The first line is the subject of the message.')
 
