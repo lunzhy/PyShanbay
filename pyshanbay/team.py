@@ -11,6 +11,7 @@ class Team:
 
     def load(self):
         # get total page number of members
+        self.members_dict.clear()
         main_page_members = self.shanbay.members_manage_page()
         total_page = parser.total_page_members(main_page_members)
 
