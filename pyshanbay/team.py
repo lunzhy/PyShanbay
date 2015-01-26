@@ -3,6 +3,7 @@
 __author__ = 'Lunzhy'
 import pyshanbay.page_parser as parser
 
+
 class Team:
     def __init__(self, shanbay):
         self.members_dict = {}
@@ -20,7 +21,7 @@ class Team:
         for page in range(1, int(total_page) + 1):
             page_html = self.shanbay.members_manage_page(page)
             pages.append(page_html)
-        members_info = parser.parse_members_manage(pages)
+        members_info = parser.parse_members_manage(pages, self.shanbay)
 
         for member in members_info:
             self.members_dict[int(member['login_id'])] = member

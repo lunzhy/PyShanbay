@@ -135,7 +135,7 @@ def paser_checkin(checkin_page):
     return checkin_list
 
 
-def parse_members_manage(pages):
+def parse_members_manage(pages, shanbay):
     members = []
     for page in pages:
         soup = BeautifulSoup(page)
@@ -147,9 +147,13 @@ def parse_members_manage(pages):
             nickname = tr.get('data-name')
 
             td_infos = tr.find_all('td')
-            username = td_infos[0].find_all('img')[0].get('alt').strip()
+
+            user_url = td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href')
+            username = parse_username(shanbay.visit_member_checkin(user_url))
+
             login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
                 'href')).strip()
+
             points = td_infos[1].get_text().strip()
             days = _get_number_out(td_infos[2].get_text()).strip()
             rate = td_infos[3].get_text().strip()
@@ -180,3 +184,10 @@ def parse_total_checkin(page):
     checkins = ul[0].find_all('a')[1].get_text()
     days = _get_number_out(checkins)
     return days
+
+
+def parse_username(page):
+    soup = BeautifulSoup(page)
+    soup.prettify()
+    t = soup.find_all(class_='page-header')[0].find_all('h2')[0].text.strip()
+    return t.strip(r'的日记').strip()

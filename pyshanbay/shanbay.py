@@ -129,7 +129,7 @@ class VisitShanbay:
         response = self.opener.open(req)
         return response.status == 200
 
-    def dismiss_member(self, dataid_list):
+    def dispel_member(self, dataid_list):
         url_dismiss = urljoin(self.base_url, '/api/v1/team/member/')
         headers = copy.deepcopy(self.headers)
         headers.update(
@@ -142,7 +142,7 @@ class VisitShanbay:
         else:
             user_ids = dataid_list
         post_data_origin = {
-            'action': 'dismiss',
+            'action': 'dispel',
             'ids': user_ids
         }
         post_data = urllib.parse.urlencode(post_data_origin).encode('utf-8')
@@ -172,10 +172,17 @@ class VisitShanbay:
     def get_member_home(self, login_id):
         return urljoin(self.base_url, '/bdc/review/progress/%s' % login_id)
 
+    def visit_member_checkin(self, user_url):
+        url_page = urljoin(self.base_url, user_url)
+        req = request.Request(url=url_page, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()
     shanbay.login()
-    # print(shanbay.dismiss_member([590287]))
+    # print(shanbay.dispel_member([590287]))
 
 

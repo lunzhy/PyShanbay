@@ -281,7 +281,7 @@ class MainWidget(UIMainWidget):
 
             self.team.kick_member(login_id)
             self.tb_members.setRowHidden(row, True)
-            self.shanbay.dismiss_member(data_id)
+            self.shanbay.dispel_member(data_id)
         return
 
     def do_send_message(self):
