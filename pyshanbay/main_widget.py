@@ -9,6 +9,7 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
+import threading
 
 
 class MainWidget(UIMainWidget):
@@ -58,7 +59,6 @@ class MainWidget(UIMainWidget):
             self.tb_recent_words.setRowHeight(i, 27)
         self.tb_recent_words.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-
 
         self.tb_recent_checkin.setRowCount(3)
         self.tb_recent_checkin.setColumnCount(7)
@@ -160,6 +160,8 @@ class MainWidget(UIMainWidget):
         self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         self.tb_members.clearSelection()
         self.tb_members.selectRow(0)
+
+        threading.Thread(target=self.refresh_username_count()).start()
         return None
 
     def _get_selected_loginid(self):
@@ -350,6 +352,7 @@ class MainWidget(UIMainWidget):
         self.text_rates.setText('N/A')
         self.text_checkins.setText('N/A')
         pass
+        return None
 
     def table_item_clicked(self, item):
         # TODO: item selection and clicking status requires improvement.
@@ -364,7 +367,16 @@ class MainWidget(UIMainWidget):
         (login_id, row) = ret
         checkins = self.team.get_checkins(login_id)
         self.text_checkins.setText(str(checkins))
-        return
+        return None
+
+    def refresh_username_count(self):
+        all_members = self.team.all_members()
+        origin_text = self.label_refresh_time.text()
+        for index, member in enumerate(all_members):
+            new_text = '%s  username: %s/%s' % (origin_text, index+1, len(all_members))
+            self.team.add_username(member)
+            self.label_refresh_time.setText(new_text)
+        return None
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

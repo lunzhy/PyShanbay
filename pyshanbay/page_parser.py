@@ -149,7 +149,8 @@ def parse_members_manage(pages, shanbay):
             td_infos = tr.find_all('td')
 
             user_url = td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href')
-            username = parse_username(shanbay.visit_member_checkin(user_url))
+            # username = parse_username(shanbay.visit_member_checkin(user_url))
+            username = ''
 
             login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
                 'href')).strip()
@@ -164,6 +165,7 @@ def parse_members_manage(pages, shanbay):
 
             member = {
                 'login_id': login_id,
+                'user_url': user_url,
                 'username': username,
                 'nickname': nickname,
                 'data_id': data_id,
