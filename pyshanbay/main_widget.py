@@ -168,7 +168,6 @@ class MainWidget(UIMainWidget):
         self.edit_search.clear()
         datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
-        # self.label_refresh_time.setText(text_time)
         self.refresh_time = text_time
         self.team.load()
 
@@ -180,7 +179,10 @@ class MainWidget(UIMainWidget):
         self.tb_members.clearSelection()
         self.tb_members.selectRow(0)
 
-        self.get_username()
+        if self.config.cfg_parser['Data'].getboolean('auto_username') is True:
+            self.get_username()
+        else:
+            self.label_refresh_time.setText(self.refresh_time)
         return None
 
     def _get_selected_loginid(self):
@@ -273,10 +275,11 @@ class MainWidget(UIMainWidget):
         member = self.team.member(login_id)
 
         if len(member['username']) is 0:
-            info = 'Username for %s has not been obtained.\n' \
-                   'Please wait for a moment.' % member['nickname']
-            QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
-            return
+            # info = 'Username for %s has not been obtained.\n' \
+            #        'Please wait for a moment.' % member['nickname']
+            # QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            # return
+            self.team.add_username(member)
 
         if self.chb_kickout_msg.isChecked():
             msg = self.textEdit_msg.toPlainText()
@@ -319,10 +322,11 @@ class MainWidget(UIMainWidget):
         member = self.team.member(login_id)
 
         if len(member['username']) is 0:
-            info = 'Username for %s has not been obtained.\n' \
-                   'Please wait for a moment.' % member['nickname']
-            QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
-            return
+            # info = 'Username for %s has not been obtained.\n' \
+            #       'Please wait for a moment.' % member['nickname']
+            # QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            # return
+            self.team.add_username(member)
 
         msg = self.textEdit_msg.toPlainText()
         lines = msg.split('\n')
