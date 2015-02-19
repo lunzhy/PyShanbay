@@ -76,3 +76,13 @@ class Team:
 
     def kick_member(self, login_id):
         self.members_dict.pop(int(login_id))
+        return None
+
+    def add_username(self, member):
+        login_id = member['login_id']
+        user_url = member['user_url']
+        username = parser.parse_username(self.shanbay.visit_member_checkin(user_url))
+        self.members_dict[int(login_id)].update(
+            {'username': username}
+        )
+        return None

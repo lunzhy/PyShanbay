@@ -9,11 +9,29 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
+import threading
+
+
+class UsernameThread(QtCore.QThread):
+
+    username_got = QtCore.pyqtSignal(str)
+
+    def __init__(self, team):
+        super(UsernameThread, self).__init__()
+        self.team = team
+
+    def run(self):
+        all_members = self.team.all_members()
+        for index, member in enumerate(all_members):
+            new_text = '%s/%s' % (index + 1, len(all_members))
+            self.team.add_username(member)
+            self.username_got.emit(new_text)
 
 
 class MainWidget(UIMainWidget):
     def __init__(self, config):
         super().__init__()
+        self.refresh_time = ''
         self.config = config
         self.set_widget_property()
         # login shanbay
@@ -21,6 +39,8 @@ class MainWidget(UIMainWidget):
                                     self.config.cfg_parser['Global']['password'])
         self.shanbay.login()
         self.team = Team(self.shanbay)
+        self.username_thread = UsernameThread(self.team)
+        self.username_thread.username_got.connect(self.refresh_username_count)
 
     @staticmethod
     def _change_date_style(origin_str):
@@ -58,7 +78,6 @@ class MainWidget(UIMainWidget):
             self.tb_recent_words.setRowHeight(i, 27)
         self.tb_recent_words.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.tb_recent_words.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-
 
         self.tb_recent_checkin.setRowCount(3)
         self.tb_recent_checkin.setColumnCount(7)
@@ -149,8 +168,7 @@ class MainWidget(UIMainWidget):
         self.edit_search.clear()
         datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
-        self.label_refresh_time.setText(text_time)
-
+        self.refresh_time = text_time
         self.team.load()
 
         if self.config.cfg_parser['Data'].getboolean('total_checkin') is True:
@@ -160,6 +178,11 @@ class MainWidget(UIMainWidget):
         self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         self.tb_members.clearSelection()
         self.tb_members.selectRow(0)
+
+        if self.config.cfg_parser['Data'].getboolean('auto_username') is True:
+            self.get_username()
+        else:
+            self.label_refresh_time.setText(self.refresh_time)
         return None
 
     def _get_selected_loginid(self):
@@ -251,6 +274,13 @@ class MainWidget(UIMainWidget):
         (login_id, row) = ret
         member = self.team.member(login_id)
 
+        if len(member['username']) is 0:
+            # info = 'Username for %s has not been obtained.\n' \
+            #        'Please wait for a moment.' % member['nickname']
+            # QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            # return
+            self.team.add_username(member)
+
         if self.chb_kickout_msg.isChecked():
             msg = self.textEdit_msg.toPlainText()
             lines = msg.split('\n')
@@ -290,6 +320,13 @@ class MainWidget(UIMainWidget):
             return None
         (login_id, row) = ret
         member = self.team.member(login_id)
+
+        if len(member['username']) is 0:
+            # info = 'Username for %s has not been obtained.\n' \
+            #       'Please wait for a moment.' % member['nickname']
+            # QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            # return
+            self.team.add_username(member)
 
         msg = self.textEdit_msg.toPlainText()
         lines = msg.split('\n')
@@ -350,6 +387,7 @@ class MainWidget(UIMainWidget):
         self.text_rates.setText('N/A')
         self.text_checkins.setText('N/A')
         pass
+        return None
 
     def table_item_clicked(self, item):
         # TODO: item selection and clicking status requires improvement.
@@ -364,7 +402,15 @@ class MainWidget(UIMainWidget):
         (login_id, row) = ret
         checkins = self.team.get_checkins(login_id)
         self.text_checkins.setText(str(checkins))
-        return
+        return None
+
+    def get_username(self):
+        self.username_thread.start()
+
+    def refresh_username_count(self, text):
+        new_text = r'%s  用户名: %s' % (self.refresh_time, text)
+        self.label_refresh_time.setText(new_text)
+        return None
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
