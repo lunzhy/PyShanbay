@@ -27,6 +27,19 @@ class Team:
             self.members_dict[int(member['login_id'])] = member
         return None
 
+    def get_page_count(self):
+        self.members_dict.clear()
+        main_page_members = self.shanbay.members_manage_page()
+        total_page = parser.total_page_members(main_page_members)
+        return int(total_page)
+
+    def load_page(self, page_number):
+        page_html = self.shanbay.members_manage_page(page_number)
+        members_info = parser.parse_members_manage([page_html], self.shanbay)
+        for member in members_info:
+            self.members_dict[int(member['login_id'])] = member
+        return None
+
     def rank_points(self):
         members = list(self.members_dict.values())
         members = sorted(members, key=lambda x: int(x['points']), reverse=True)

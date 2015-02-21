@@ -33,8 +33,8 @@ class VisitShanbay:
         return
 
     def home(self):
-        home_url = self.base_url
-        req = request.Request(url=home_url)
+        url_login = urljoin(self.base_url, '/accounts/login/')
+        req = request.Request(url=url_login)
         self.opener.open(req)
         for ck in self.cookie:
             if ck.name == 'csrftoken':

@@ -9,7 +9,25 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
-import threading
+
+
+class LoadTeamThread(QtCore.QThread):
+
+    member_read = QtCore.pyqtSignal(str)
+    member_read_finish = QtCore.pyqtSignal()
+
+    def __init__(self, team):
+        super(LoadTeamThread, self).__init__()
+        self.team = team
+
+    def run(self):
+        pages_count = self.team.get_page_count()
+        for index in range(pages_count):
+            page_num = index + 1
+            self.team.load_page(page_num)
+            page_count_text = '%s/%s' % (page_num, pages_count)
+            self.member_read.emit(page_count_text)
+        self.member_read_finish.emit()
 
 
 class UsernameThread(QtCore.QThread):
@@ -41,6 +59,10 @@ class MainWidget(UIMainWidget):
         self.team = Team(self.shanbay)
         self.username_thread = UsernameThread(self.team)
         self.username_thread.username_got.connect(self.refresh_username_count)
+        self.load_team_thread = LoadTeamThread(self.team)
+        self.load_team_thread.member_read.connect(self.refresh_read_member)
+
+        self.load_team_thread.member_read_finish.connect(self.do_refresh_members)
 
     @staticmethod
     def _change_date_style(origin_str):
@@ -98,7 +120,7 @@ class MainWidget(UIMainWidget):
         self.tb_members.itemSelectionChanged.connect(self.selected_member)
         self.tb_members.itemClicked.connect(self.table_item_clicked)
         self.tb_members.itemSelectionChanged.connect(self.clear_table_recent)
-        self.btn_refresh.clicked.connect(self.do_refresh_members)
+        self.btn_refresh.clicked.connect(self.load_team)
         self.btn_recent_words.clicked.connect(self.do_set_recent_words)
         self.btn_recent_checkin.clicked.connect(self.do_set_recent_checkin)
         self.btn_kickout.clicked.connect(self.do_kickout_member)
@@ -169,7 +191,8 @@ class MainWidget(UIMainWidget):
         datetime_str = self.shanbay.get_server_time().strftime('%Y-%m-%d %H:%M')
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
         self.refresh_time = text_time
-        self.team.load()
+
+        # self.team.load()
 
         if self.config.cfg_parser['Data'].getboolean('total_checkin') is True:
             self.team.add_total_checkins()
@@ -183,6 +206,8 @@ class MainWidget(UIMainWidget):
             self.get_username()
         else:
             self.label_refresh_time.setText(self.refresh_time)
+
+        self.btn_refresh.setEnabled(True)
         return None
 
     def _get_selected_loginid(self):
@@ -407,10 +432,20 @@ class MainWidget(UIMainWidget):
     def get_username(self):
         self.username_thread.start()
 
+    def load_team(self):
+        self.tb_members.clearContents()
+        self.edit_search.clear()
+        self.load_team_thread.start()
+        self.btn_refresh.setEnabled(False)
+
     def refresh_username_count(self, text):
         new_text = r'%s  用户名: %s' % (self.refresh_time, text)
         self.label_refresh_time.setText(new_text)
         return None
+
+    def refresh_read_member(self, text):
+        new_text = r'%s%s' % (self.label_read_member.text()[:5], text)
+        self.label_read_member.setText(new_text)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
