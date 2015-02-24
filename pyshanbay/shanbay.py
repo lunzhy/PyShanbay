@@ -179,6 +179,19 @@ class VisitShanbay:
         page_html = response.read()
         return page_html
 
+    def visit_checkin_diary_main(self, login_id):
+        url_checkin = urljoin(self.base_url, '/checkin/user/%s/' % login_id)
+        req = request.Request(url=url_checkin, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
+
+    def visit_checkin_diary(self, login_id, page_num):
+        url_checkin = urljoin(self.base_url, '/checkin/user/%s/?page=%s' % (login_id, page_num))
+        req = request.Request(url=url_checkin, headers=self.headers)
+        response = self.opener.open(req)
+        page_html = response.read()
+        return page_html
 
 if __name__ == '__main__':
     shanbay = VisitShanbay()

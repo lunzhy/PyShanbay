@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 __author__ = 'Lunzhy'
 import pyshanbay.page_parser as parser
+import datetime
 
 
 class Team:
@@ -21,7 +22,7 @@ class Team:
         for page in range(1, int(total_page) + 1):
             page_html = self.shanbay.members_manage_page(page)
             pages.append(page_html)
-        members_info = parser.parse_members_manage(pages, self.shanbay)
+        members_info = parser.parse_members_manage(pages)
 
         for member in members_info:
             self.members_dict[int(member['login_id'])] = member
@@ -35,7 +36,7 @@ class Team:
 
     def load_page(self, page_number):
         page_html = self.shanbay.members_manage_page(page_number)
-        members_info = parser.parse_members_manage([page_html], self.shanbay)
+        members_info = parser.parse_members_manage([page_html])
         for member in members_info:
             self.members_dict[int(member['login_id'])] = member
         return None
@@ -87,8 +88,9 @@ class Team:
     def all_members(self):
         return list(self.members_dict.values())
 
-    def kick_member(self, login_id):
-        self.members_dict.pop(int(login_id))
+    def kick_member(self, login_id_list):
+        for login_id in login_id_list:
+            self.members_dict.pop(int(login_id))
         return None
 
     def add_username(self, member):
@@ -99,3 +101,58 @@ class Team:
             {'username': username}
         )
         return None
+
+    def analyse_checkin_diary(self, member, max_absent_days):
+        login_id = member['login_id']
+        main_page = self.shanbay.visit_checkin_diary_main(login_id)
+        username, total_checkin_days, diary_pages = \
+            parser.parse_username_total_checkins_total_pages(main_page)
+        self.members_dict[int(login_id)].update(
+            {'checkins': total_checkin_days,
+             'username': username}
+        )
+
+        # need to modify today
+        date_end = datetime.date.today() + datetime.timedelta(days=-max_absent_days)
+        checkin_dates = []
+
+        stop = False
+        for page_index in range(diary_pages):
+            page_num = page_index + 1
+            page = self.shanbay.visit_checkin_diary(login_id, page_num)
+            dates_in_page = parser.parse_checkin_days(page)
+            dates_in_page = sorted(dates_in_page, reverse=True)
+            for checkin_date in dates_in_page:
+                if checkin_date < date_end:
+                    stop = True
+                    break
+                else:
+                    checkin_dates.append(checkin_date)
+            if stop is True:
+                break
+
+        self.members_dict[int(login_id)].update(
+            {'checkin_dates': checkin_dates}
+        )
+        return
+
+    def search_absent(self, absent_days):
+        result = []
+        date_end = datetime.date.today() + datetime.timedelta(days=-absent_days)
+        for login_id, member in self.members_dict.items():
+            try:
+                checkin_days = member['checkin_dates']
+            except KeyError:
+                checkin_days = []
+            checkin_days = sorted(checkin_days, reverse=True)
+            if len(checkin_days) == 0:
+                result.append(member)
+            else:
+                latest_checkin = checkin_days[0]
+                if latest_checkin <= date_end:
+                    result.append(member)
+        return result
+
+
+
+
