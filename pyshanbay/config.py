@@ -22,8 +22,8 @@ class ShanbayConfig:
 
         self.cfg_parser.add_section('Data')
         section = self.cfg_parser['Data']
-        section['total_checkin'] = 'no'
-        section['auto_username'] = 'no'
+        section['max_absent_days'] = '10'
+        section['number_of_threads'] = '10'
 
         with open(filename, 'w') as file:
             self.cfg_parser.write(file)

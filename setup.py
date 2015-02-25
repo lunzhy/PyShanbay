@@ -7,11 +7,13 @@ includes = ["PyQt4"]
 exe = Executable(
     script="main.py",
     targetName='ShanbayTeam.exe',
-    base="Win32GUI"
+    base="Win32GUI",
+    icon='icon.ico'
 )
 
+includefiles=['icon.ico']
 setup(
     name = "PyShanbay",
-    options = {"build_exe": {"includes":includes}},
+    options = {"build_exe": {"includes":includes, "include_files":includefiles}},
     executables = [exe]
 )

@@ -105,7 +105,7 @@ def parse_recent_progress(progress_page):
     return nums_recent, reviewed_recent
 
 
-def paser_checkin(checkin_page):
+def parse_checkin(checkin_page):
     soup = BeautifulSoup(checkin_page)
     soup.prettify()
     div_checkins = soup.find_all('div', {'class': 'checkin span8'})
@@ -120,22 +120,24 @@ def paser_checkin(checkin_page):
     words = [_regex_search(r'\d+(?= 个单词)', note) for note in notes]
     reads = [_regex_search(r'\d+(?= 篇文章)', note) for note in notes]
     sents = [_regex_search(r'\d+(?= 个句子)', note) for note in notes]
+    lstns = [_regex_search(r'\d+(?= 句听力)', note) for note in notes]
 
     dates = [_parse_chinese_date(date) for date in dates]
     checkin_list = []
 
-    for date, word, read, sent in zip(dates, words, reads, sents):
+    for date, word, read, sent, lstn in zip(dates, words, reads, sents, lstns):
         word = 0 if word == '' else int(word)
         read = 0 if read == '' else int(read)
         sent = 0 if sent == '' else int(sent)
-        checkin = {'words': word, 'reads': read, 'sents': sent}
+        lstn = 0 if lstn == '' else int(lstn)
+        checkin = {'words': word, 'reads': read, 'sents': sent, 'lstns': lstn}
         date_checkin = [date, checkin]
         checkin_list.append(date_checkin)
 
     return checkin_list
 
 
-def parse_members_manage(pages, shanbay):
+def parse_members_manage(pages):
     members = []
     for page in pages:
         soup = BeautifulSoup(page)
@@ -149,7 +151,7 @@ def parse_members_manage(pages, shanbay):
             td_infos = tr.find_all('td')
 
             user_url = td_infos[0].find_all('a', {'class': 'nickname'})[0].get('href')
-            # username = parse_username(shanbay.visit_member_checkin(user_url))
+
             username = ''
 
             login_id = _get_number_out(td_infos[0].find_all('a', {'class': 'nickname'})[0].get(
@@ -193,3 +195,33 @@ def parse_username(page):
     soup.prettify()
     t = soup.find_all(class_='page-header')[0].find_all('h2')[0].text.strip()
     return t.strip(r'的日记').strip()
+
+
+def parse_username_total_checkins_total_pages(page):
+    soup = BeautifulSoup(page)
+    soup.prettify()
+    # get username
+    t = soup.find_all(class_='page-header')[0].find_all('h2')[0].text.strip()
+    username = t.strip(r'的日记').strip()
+    # get total check-in days
+    try:
+        total_days = soup.find_all(class_='number')[0].text.strip()
+    except IndexError:
+        total_days = 0
+    # get total check-in pages
+    links_page = soup.find_all(class_='endless_page_link')
+    try:
+        total_pages = links_page[-2].text.strip()  # the second last number is total page number
+    except IndexError:
+        total_pages = 1
+    return username, int(total_days), int(total_pages)
+
+
+def parse_checkin_days(page):
+    soup = BeautifulSoup(page)
+    soup.prettify()
+    anchor_dates = soup.find_all('a', {'class': 'target'})
+    dates = []
+    for checkin_date in anchor_dates:
+        dates.append(_parse_chinese_date(checkin_date.get_text().strip()))
+    return dates
