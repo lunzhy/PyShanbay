@@ -62,8 +62,6 @@ class MainWidget(UIMainWidget):
         self.group_list = []
 
         # manipulate the threads
-        max_absent = self.config.cfg_parser['Data'].getint('max_absent_days')
-
         self.load_team_thread = LoadTeamThread(self.team)
         self.load_team_thread.member_read.connect(self.refresh_read_member)
         self.load_team_thread.member_read_finished.connect(self.do_refresh_table_members)
@@ -139,7 +137,7 @@ class MainWidget(UIMainWidget):
         for i in range(7):
             self.tb_recent_checkin.setColumnWidth(i, 42)
         for i in range(3):
-            self.tb_recent_checkin.setRowHeight(i, 28)
+            self.tb_recent_checkin.setRowHeight(i, 29)
         self.tb_recent_checkin.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
         self.tb_recent_checkin.verticalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
@@ -392,7 +390,13 @@ class MainWidget(UIMainWidget):
                 self.team.add_username(member)
 
         kickouts = [member['username'] for member in members_to_kick]
-        nicknames = ', '.join([member['nickname'] for member in members_to_kick])
+
+        if len(members_to_kick) > 20:
+            nicknames = ', '.join([member['nickname'] for member in members_to_kick[:20]])
+            nicknames += ', ... ... (totally %s members)' % len(members_to_kick)
+        else:
+            nicknames = ', '.join([member['nickname'] for member in members_to_kick])
+
         kick_ids = [member['data_id'] for member in members_to_kick]
         login_ids = [member['login_id'] for member in members_to_kick]
 
@@ -417,44 +421,50 @@ class MainWidget(UIMainWidget):
             info = 'Are you sure to kick\n' \
                    '%s ?\n\n' \
                    'no message to send' % nicknames
-
         reply = QtGui.QMessageBox.question(self, 'Message', info,
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
                                            QtGui.QMessageBox.No)
+        if reply == QtGui.QMessageBox.No:
+            return None
+        info = 'Are you sure to kick\n%s ?\n\n' % nicknames
 
-        if reply == QtGui.QMessageBox.Yes:
+        double_check_reply = QtGui.QMessageBox.question(self, 'Double Check', info,
+                                    QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
+                                    QtGui.QMessageBox.No)
+        if double_check_reply == QtGui.QMessageBox.No:
+            return None
 
-            if self.chb_kickout_msg.isChecked():
-                self.shanbay.send_message(kickouts, subject, content)
+        if self.chb_kickout_msg.isChecked():
+            self.shanbay.send_message(kickouts, subject, content)
 
-            # remove the rows in the tables, remove the row in group list first
-            for kick_id in login_ids:
-                # remove the row in group table
-                row_to_kick = None
-                for row_index in range(self.tb_group.rowCount()):
-                    login_id = self.tb_group.item(row_index, 0).text()
-                    if login_id == kick_id:
-                        row_to_kick = row_index
-                        break
-                if row_to_kick is not None:
-                    self.tb_group.removeRow(row_to_kick)
-                    member = self.team.member(kick_id)
-                    self.group_list.remove(member)
+        # remove the rows in the tables, remove the row in group list first
+        for kick_id in login_ids:
+            # remove the row in group table
+            row_to_kick = None
+            for row_index in range(self.tb_group.rowCount()):
+                login_id = self.tb_group.item(row_index, 0).text()
+                if login_id == kick_id:
+                    row_to_kick = row_index
+                    break
+            if row_to_kick is not None:
+                self.tb_group.removeRow(row_to_kick)
+                member = self.team.member(kick_id)
+                self.group_list.remove(member)
 
-                # remove the row in member table
-                row_to_kick = None
-                for row_index in range(self.tb_members.rowCount()):
-                    login_id = self.tb_members.item(row_index, 0).text()
-                    if login_id == kick_id:
-                        row_to_kick = row_index
-                        break
-                if row_to_kick is not None:
-                    self.tb_members.removeRow(row_to_kick)
+            # remove the row in member table
+            row_to_kick = None
+            for row_index in range(self.tb_members.rowCount()):
+                login_id = self.tb_members.item(row_index, 0).text()
+                if login_id == kick_id:
+                    row_to_kick = row_index
+                    break
+            if row_to_kick is not None:
+                self.tb_members.removeRow(row_to_kick)
 
-            self.team.kick_member(login_ids)
-            self.diary_parsed_count -= len(login_ids)
+        self.team.kick_member(login_ids)
+        self.diary_parsed_count -= len(login_ids)
 
-            self.shanbay.dispel_member(kick_ids)
+        self.shanbay.dispel_member(kick_ids)
         return
 
     def do_send_message(self):
@@ -484,9 +494,13 @@ class MainWidget(UIMainWidget):
                 self.team.add_username(member)
 
         recipients = [member['username'] for member in members_to_send]
-        nicknames = [member['nickname'] for member in members_to_send]
 
-        nicknames = ', '.join(nicknames)
+        if len(members_to_send) > 20:
+            nicknames = ', '.join([member['nickname'] for member in members_to_send[:20]])
+            nicknames += ', ... ... (totally %s members)' % len(members_to_send)
+        else:
+            nicknames = [member['nickname'] for member in members_to_send]
+            nicknames = ', '.join(nicknames)
 
         msg = self.textEdit_msg.toPlainText()
         lines = msg.split('\n')
@@ -620,10 +634,13 @@ class MainWidget(UIMainWidget):
             QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
             return None
 
+        max_absent = self.config.cfg_parser['Data'].getint('max_absent_days')
         try:
             absent_days = int(self.edit_absent_days.text())
+            if (0 <= absent_days <= max_absent) is not True:
+                raise ValueError
         except ValueError:
-            info = 'Please input a number.'
+            info = 'Please input a number between 0 and %s .' % max_absent
             QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
             return None
 
