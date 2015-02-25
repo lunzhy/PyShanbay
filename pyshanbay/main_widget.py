@@ -79,19 +79,22 @@ class MainWidget(UIMainWidget):
 
     def set_widget_property(self):
         # set the members tables
-        self.tb_members.setColumnCount(5)  # login-id, rank, checked_today&yesterday, rate, nickname
+        self.tb_members.setColumnCount(6)
+        # login-id, rank, checked_today&yesterday, rate, days,nickname
         self.tb_members.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_members.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.tb_members.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         # self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_members.verticalHeader().setVisible(False)
-        self.tb_members.setColumnHidden(0, True)
 
-        self.tb_members.setHorizontalHeaderLabels(['login id', '排名', '打卡', '打卡率', '昵称'])
+        headers = ['login id', '排名', '打卡', '打卡率', '组龄', '昵称']
+        self.tb_members.setHorizontalHeaderLabels(headers)
         self.tb_members.setSortingEnabled(True)
+        self.tb_members.setColumnHidden(0, True)
         self.tb_members.setColumnWidth(1, 33)
         self.tb_members.setColumnWidth(2, 33)
         self.tb_members.setColumnWidth(3, 45)
+        self.tb_members.setColumnWidth(4, 33)
         self.tb_members.horizontalHeader().setStretchLastSection(True)
         # self.tb_members.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
@@ -191,8 +194,17 @@ class MainWidget(UIMainWidget):
             new_item.setData(QtCore.Qt.EditRole, rate)
             table_to_set.setItem(row_index, 3, new_item)
 
-            new_item = QtGui.QTableWidgetItem(str(member['nickname']))
-            table_to_set.setItem(row_index, 4, new_item)
+            if table_to_set == self.tb_members:
+                new_item = QtGui.QTableWidgetItem()
+                new_item.setData(QtCore.Qt.EditRole, int(member['days']))
+                table_to_set.setItem(row_index, 4, new_item)
+
+                new_item = QtGui.QTableWidgetItem(str(member['nickname']))
+                table_to_set.setItem(row_index, 5, new_item)
+
+            elif table_to_set == self.tb_group:
+                new_item = QtGui.QTableWidgetItem(str(member['nickname']))
+                table_to_set.setItem(row_index, 4, new_item)
 
         # bug: sorting the items will lead to blank rows
         table_to_set.setSortingEnabled(True)
@@ -380,7 +392,7 @@ class MainWidget(UIMainWidget):
                 self.team.add_username(member)
 
         kickouts = [member['username'] for member in members_to_kick]
-        nicknames = ','.join([member['nickname'] for member in members_to_kick])
+        nicknames = ', '.join([member['nickname'] for member in members_to_kick])
         kick_ids = [member['data_id'] for member in members_to_kick]
         login_ids = [member['login_id'] for member in members_to_kick]
 
@@ -474,7 +486,7 @@ class MainWidget(UIMainWidget):
         recipients = [member['username'] for member in members_to_send]
         nicknames = [member['nickname'] for member in members_to_send]
 
-        nicknames = ','.join(nicknames)
+        nicknames = ', '.join(nicknames)
 
         msg = self.textEdit_msg.toPlainText()
         lines = msg.split('\n')
