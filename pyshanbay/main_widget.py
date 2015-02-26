@@ -9,6 +9,7 @@ from pyshanbay.shanbay import VisitShanbay
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
+import re
 
 
 class LoadTeamThread(QtCore.QThread):
@@ -61,6 +62,8 @@ class MainWidget(UIMainWidget):
         self.team = Team(self.shanbay)
         self.group_list = []
 
+        self.max_absent_days = self.config.cfg_parser['Data'].getint('max_absent_days')
+
         # manipulate the threads
         self.load_team_thread = LoadTeamThread(self.team)
         self.load_team_thread.member_read.connect(self.refresh_read_member)
@@ -74,6 +77,26 @@ class MainWidget(UIMainWidget):
         date = datetime.datetime.strptime(origin_str, '%Y-%m-%d')
         date_str = date.strftime('%m-%d')
         return date_str
+
+    def assemble_message(self, msg_text, member):
+        patt = re.compile(r'(?<=\[).*?(?=\])')
+        keys = patt.findall(msg_text)
+        if len(keys) == 0:
+            return msg_text
+        else:
+            new_text = msg_text
+            for key in keys:
+                patt = re.compile(r'\[%s\]' % key)
+                try:
+                    new_text = re.sub(patt, str(member[key]), new_text)
+                except KeyError:
+                    self.team.analyse_checkin_diary(member, self.max_absent_days)
+                    try:
+                        new_text = re.sub(patt, str(member[key]), new_text)
+                    except KeyError:
+                        pass
+
+        return new_text
 
     def set_widget_property(self):
         # set the members tables
@@ -97,21 +120,23 @@ class MainWidget(UIMainWidget):
         # self.tb_members.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
 
         # set group table
-        self.tb_group.setColumnCount(5)  # login-id, rank, checked_today&yesterday,
+        self.tb_group.setColumnCount(7)  # login-id, rank, checked_today&yesterday,
         # rate, nickname
         self.tb_group.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.tb_group.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.tb_group.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         # self.tb_members.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.tb_group.verticalHeader().setVisible(False)
-        self.tb_group.setColumnHidden(0, True)
 
-        self.tb_group.setHorizontalHeaderLabels(
-            ['login id', '排名', '打卡', '打卡率', '昵称'])
+        headers = ['login id', '排名', '打卡', '打卡率', '组龄', '缺卡', '昵称']
+        self.tb_group.setHorizontalHeaderLabels(headers)
         self.tb_group.setSortingEnabled(True)
+        self.tb_group.setColumnHidden(0, True)
         self.tb_group.setColumnWidth(1, 33)
         self.tb_group.setColumnWidth(2, 33)
         self.tb_group.setColumnWidth(3, 45)
+        self.tb_group.setColumnWidth(4, 33)
+        self.tb_group.setColumnWidth(5, 33)
         self.tb_group.horizontalHeader().setStretchLastSection(True)
 
         # set other tables
@@ -166,6 +191,9 @@ class MainWidget(UIMainWidget):
         self.rbtn_group.toggled.connect(self.selected_member)
         self.rbtn_group.toggled.connect(self.clear_table_recent)
 
+        self.tb_members.mouseDoubleClickEvent = self.do_double_click_member_table
+        self.tb_group.mouseDoubleClickEvent = self.do_double_click_group_table
+
         return None
 
     def set_table_data(self, table_to_set, members_data):
@@ -192,17 +220,28 @@ class MainWidget(UIMainWidget):
             new_item.setData(QtCore.Qt.EditRole, rate)
             table_to_set.setItem(row_index, 3, new_item)
 
-            if table_to_set == self.tb_members:
-                new_item = QtGui.QTableWidgetItem()
-                new_item.setData(QtCore.Qt.EditRole, int(member['days']))
-                table_to_set.setItem(row_index, 4, new_item)
+            new_item = QtGui.QTableWidgetItem()
+            new_item.setData(QtCore.Qt.EditRole, int(member['days']))
+            table_to_set.setItem(row_index, 4, new_item)
 
-                new_item = QtGui.QTableWidgetItem(str(member['nickname']))
+            if table_to_set == self.tb_group:
+                try:
+                    absent_days = member['absent']
+                except KeyError:
+                    # max_absent = self.max_absent_days
+                    # self.team.get_absent_days(member, max_absent)
+                    absent_days = 'N/A'
+
+                new_item = QtGui.QTableWidgetItem(str(absent_days))
                 table_to_set.setItem(row_index, 5, new_item)
 
-            elif table_to_set == self.tb_group:
+                new_item = QtGui.QTableWidgetItem()
+                new_item.setData(QtCore.Qt.EditRole, str(member['nickname']))
+                table_to_set.setItem(row_index, 6, new_item)
+
+            elif table_to_set == self.tb_members:
                 new_item = QtGui.QTableWidgetItem(str(member['nickname']))
-                table_to_set.setItem(row_index, 4, new_item)
+                table_to_set.setItem(row_index, 5, new_item)
 
         # bug: sorting the items will lead to blank rows
         table_to_set.setSortingEnabled(True)
@@ -435,7 +474,9 @@ class MainWidget(UIMainWidget):
             return None
 
         if self.chb_kickout_msg.isChecked():
-            self.shanbay.send_message(kickouts, subject, content)
+            for member, kickout in zip(members_to_kick, kickouts):
+                user_content = self.assemble_message(content, member)
+                self.shanbay.send_message(kickout, subject, user_content)
 
         # remove the rows in the tables, remove the row in group list first
         for kick_id in login_ids:
@@ -509,7 +550,7 @@ class MainWidget(UIMainWidget):
         except IndexError:
             subject = 'no subject'
         try:
-            content = lines[1]
+            content = '\n'.join(lines[1:])
         except IndexError:
             content = 'no content'
 
@@ -522,7 +563,9 @@ class MainWidget(UIMainWidget):
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No,
                                            QtGui.QMessageBox.No)
         if reply == QtGui.QMessageBox.Yes:
-            self.shanbay.send_message(recipients, subject, content)
+            for member, recipient in zip(members_to_send, recipients):
+                user_content = self.assemble_message(content, member)
+                self.shanbay.send_message(recipient, subject, user_content)
         return
 
     def do_open_home(self, ev):
@@ -634,7 +677,7 @@ class MainWidget(UIMainWidget):
             QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
             return None
 
-        max_absent = self.config.cfg_parser['Data'].getint('max_absent_days')
+        max_absent = self.max_absent_days
         try:
             absent_days = int(self.edit_absent_days.text())
             if (0 <= absent_days <= max_absent) is not True:
@@ -657,7 +700,7 @@ class MainWidget(UIMainWidget):
         return None
 
     def load_user_diary(self):
-        max_absent = self.config.cfg_parser['Data'].getint('max_absent_days')
+        max_absent = self.max_absent_days
         number_of_threads = self.config.cfg_parser['Data'].getint('number_of_threads')
 
         all_members = self.team.all_members()
@@ -691,6 +734,24 @@ class MainWidget(UIMainWidget):
         self.diary_parsed_count += 1
         finished = '%s%s/%s' % (title_text, self.diary_parsed_count, total_count)
         self.label_get_diary.setText(finished)
+        return None
+
+    def do_double_click_member_table(self, event):
+        if self.rbtn_member.isChecked() is not True:
+            self.rbtn_member.click()
+        if event.button() == QtCore.Qt.LeftButton:
+            self.do_set_recent_words()
+        elif event.button() == QtCore.Qt.RightButton:
+            self.do_set_recent_checkin()
+        return None
+
+    def do_double_click_group_table(self, event):
+        if self.rbtn_group.isChecked() is not True:
+            self.rbtn_group.click()
+        if event.button() == QtCore.Qt.LeftButton:
+            self.do_set_recent_words()
+        elif event.button() == QtCore.Qt.RightButton:
+            self.do_set_recent_checkin()
         return None
 
 

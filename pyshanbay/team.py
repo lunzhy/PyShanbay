@@ -103,6 +103,12 @@ class Team:
         return None
 
     def analyse_checkin_diary(self, member, max_absent_days):
+        try:
+            checkin_dates = member['checkin_dates']
+            return None
+        except KeyError:
+            pass
+
         login_id = member['login_id']
         main_page = self.shanbay.visit_checkin_diary_main(login_id)
         username, total_checkin_days, diary_pages = \
@@ -113,7 +119,10 @@ class Team:
         )
 
         # need to modify today
-        date_end = datetime.date.today() + datetime.timedelta(days=-max_absent_days)
+        group_days = int(member['days']) + 1
+        delta_days = min(group_days, max_absent_days)
+
+        date_end = datetime.date.today() + datetime.timedelta(days=-delta_days)
         checkin_dates = []
 
         stop = False
@@ -134,23 +143,35 @@ class Team:
         self.members_dict[int(login_id)].update(
             {'checkin_dates': checkin_dates}
         )
+
+        self.get_absent_days(member, max_absent_days)
         return
+
+    def get_absent_days(self, member, max_absent_days):
+        try:
+            checkin_dates = member['checkin_dates']
+        except KeyError:
+            self.analyse_checkin_diary(member, max_absent_days)
+            checkin_dates = member['checkin_dates']
+
+        checkin_dates = sorted(checkin_dates, reverse=True)
+        try:
+            latest_checkin = checkin_dates[0]
+            absent_days = (datetime.date.today() - latest_checkin).days
+        except IndexError:
+            absent_days = int(member['days']) + 1
+
+        login_id = member['login_id']
+        self.members_dict[int(login_id)].update(
+            {'absent': absent_days}
+        )
+        return None
 
     def search_absent(self, absent_days):
         result = []
-        date_end = datetime.date.today() + datetime.timedelta(days=-absent_days)
         for login_id, member in self.members_dict.items():
-            try:
-                checkin_days = member['checkin_dates']
-            except KeyError:
-                checkin_days = []
-            checkin_days = sorted(checkin_days, reverse=True)
-            if len(checkin_days) == 0:
+            if member['absent'] == absent_days:
                 result.append(member)
-            else:
-                latest_checkin = checkin_days[0]
-                if latest_checkin <= date_end:
-                    result.append(member)
         return result
 
 
