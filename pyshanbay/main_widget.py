@@ -198,8 +198,10 @@ class MainWidget(UIMainWidget):
 
     def set_table_data(self, table_to_set, members_data):
         table_to_set.setSortingEnabled(False)
+
         # sorting will conflict with the method of setting table item
         # self.tb_members.itemSelectionChanged.disconnect(self.selected_member)
+
         table_to_set.setRowCount(len(members_data))
         for row_index, member in enumerate(members_data):
             new_item = QtGui.QTableWidgetItem(member['login_id'])
@@ -276,8 +278,6 @@ class MainWidget(UIMainWidget):
         text_time = '%s%s' % (self.label_refresh_time.text()[:5], datetime_str)
         self.refresh_time = text_time
 
-        # self.team.load()
-
         self.set_table_data(self.tb_members, self.team.rank_points())
         self.tb_members.sortItems(1, QtCore.Qt.AscendingOrder)
         self.tb_members.clearSelection()
@@ -289,7 +289,6 @@ class MainWidget(UIMainWidget):
         self.edit_search.setEnabled(True)
 
         # self.load_user_diary()
-        self.diary_parsed_count = 0
         self.load_user_diary()
         return None
 
@@ -627,11 +626,11 @@ class MainWidget(UIMainWidget):
         self.group_list.clear()
         self.clear_info_text()
         self.clear_table_recent()
-        self.load_team_thread.start()
-
         self.edit_search.clear()
         self.btn_refresh.setEnabled(False)
         self.edit_search.setEnabled(False)
+        self.load_team_thread.start()
+        return None
 
     def refresh_diary_count(self, text):
         new_text = r'%s%s' % (self.label_get_diary.text()[:5], text)
@@ -700,6 +699,10 @@ class MainWidget(UIMainWidget):
         return None
 
     def load_user_diary(self):
+        self.diary_parsed_count = 0
+        [thread.quit() for thread in self.diary_threads]
+        self.diary_threads = []
+
         max_absent = self.max_absent_days
         number_of_threads = self.config.cfg_parser['Data'].getint('number_of_threads')
 

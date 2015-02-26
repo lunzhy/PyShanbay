@@ -290,7 +290,7 @@ class UIMainWidget(QtGui.QWidget):
         return None
 
     def set_ui_text(self):
-        self.setWindowTitle("Shanbay Manage")
+        self.setWindowTitle("自觉--自律——不忘初心 方得始终")
         self.btn_refresh.setText("刷新数据")
         self.label_refresh_time.setText("数据时间：00-00 12:12")
         self.label_recent_checkin.setText("最近七天打卡情况")
@@ -328,7 +328,7 @@ class UIMainWidget(QtGui.QWidget):
         self.chb_kickout_group.setText("批量名单")
         self.label_read_member.setText("组员页数：0/7")
         self.label_get_diary.setText("打卡日记：0/700")
-        self.label.setText("未打卡天数：")
+        self.label.setText("缺卡天数：")
         self.btn_absent_days.setText(">>>")
         self.rbtn_member.setText("成员列表")
         self.rbtn_group.setText("已选列表")
