@@ -72,6 +72,15 @@ class MainWidget(UIMainWidget):
         self.diary_threads = []
         self.diary_parsed_count = 0
 
+        self.update_ui()
+
+    def update_ui(self):
+        txt_absent_days = "%s%s" % (self.max_absent_days, self.label_absent_days.text()[2:])
+        self.label_absent_days.setText(txt_absent_days)
+        txt_absent_days = "%s%s" % (self.max_absent_days, self.label_search_absent.text()[2:])
+        self.label_search_absent.setText(txt_absent_days)
+        return None
+
     @staticmethod
     def _change_date_style(origin_str):
         date = datetime.datetime.strptime(origin_str, '%Y-%m-%d')
@@ -270,6 +279,12 @@ class MainWidget(UIMainWidget):
                 self.text_checkins.setText(str(member['checkins']))
             except KeyError:
                 self.text_checkins.setText('(N/A)')
+                pass
+
+            try:
+                self.text_absent_days.setText(str(member['absent']))
+            except KeyError:
+                self.text_absent_days.setText('(N/A)')
                 pass
         return None
 
@@ -737,6 +752,10 @@ class MainWidget(UIMainWidget):
         self.diary_parsed_count += 1
         finished = '%s%s/%s' % (title_text, self.diary_parsed_count, total_count)
         self.label_get_diary.setText(finished)
+
+        diary_loaded = True if self.diary_parsed_count == len(self.team.all_members()) else False
+        if diary_loaded is True:
+            self.find_early_checkin_member()
         return None
 
     def do_double_click_member_table(self, event):
@@ -755,6 +774,16 @@ class MainWidget(UIMainWidget):
             self.do_set_recent_words()
         elif event.button() == QtCore.Qt.RightButton:
             self.do_set_recent_checkin()
+        return None
+
+    def find_early_checkin_member(self):
+        for row_index in range(self.tb_group.rowCount()):
+            login_id = self.tb_group.item(row_index, 0).text()
+            early = self.team.member(login_id)['early_checkin']
+            if early is True:
+                for col in range(self.tb_members.columnCount()):
+                    self.tb_members.item(row_index, col).setBackground(
+                        QtGui.QColor(255, 0, 0))
         return None
 
 

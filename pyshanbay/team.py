@@ -120,7 +120,8 @@ class Team:
 
         # need to modify today
         group_days = int(member['days']) + 1
-        delta_days = min(group_days, max_absent_days)
+        # delta_days = min(group_days, max_absent_days)
+        delta_days = max_absent_days - 1
 
         date_end = datetime.date.today() + datetime.timedelta(days=-delta_days)
         checkin_dates = []
@@ -144,6 +145,17 @@ class Team:
             {'checkin_dates': checkin_dates}
         )
 
+        checkin_dates = sorted(checkin_dates, reverse=True)
+        try:
+            latest_date = checkin_dates[0]
+            early_checkin = latest_date > datetime.date.today()
+        except IndexError:
+            early_checkin = False
+
+        self.members_dict[int(login_id)].update(
+            {'early_checkin': early_checkin}
+        )
+
         self.get_absent_days(member, max_absent_days)
         return
 
@@ -155,11 +167,16 @@ class Team:
             checkin_dates = member['checkin_dates']
 
         checkin_dates = sorted(checkin_dates, reverse=True)
+
+        absent_days = max_absent_days - len(checkin_dates)
+
+        """
         try:
             latest_checkin = checkin_dates[0]
             absent_days = (datetime.date.today() - latest_checkin).days
         except IndexError:
             absent_days = int(member['days']) + 1
+        """
 
         login_id = member['login_id']
         self.members_dict[int(login_id)].update(
