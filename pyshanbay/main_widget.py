@@ -448,7 +448,7 @@ class MainWidget(UIMainWidget):
             except IndexError:
                 subject = 'no subject'
             try:
-                content = lines[1]
+                content = '\n'.join(lines[1:])
             except IndexError:
                 content = 'no content'
             info = 'Are you sure to kick\n' \
