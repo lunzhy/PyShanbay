@@ -22,8 +22,13 @@ class ShanbayConfig:
 
         self.cfg_parser.add_section('Data')
         section = self.cfg_parser['Data']
-        section['max_absent_days'] = '10'
+        section['read_diary_days'] = '15'
         section['number_of_threads'] = '10'
+
+        self.cfg_parser.add_section('Filter')
+        section = self.cfg_parser['Filter']
+        section['min_rate'] = '0.90'
+        section['team_requirement'] = '21'
 
         with open(filename, 'w') as file:
             self.cfg_parser.write(file)

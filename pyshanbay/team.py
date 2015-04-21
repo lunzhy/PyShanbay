@@ -102,7 +102,7 @@ class Team:
         )
         return None
 
-    def analyse_checkin_diary(self, member, max_absent_days):
+    def analyse_checkin_diary(self, member, read_diary_days):
         try:
             checkin_dates = member['checkin_dates']
             return None
@@ -120,8 +120,8 @@ class Team:
 
         # need to modify today
         group_days = int(member['days']) + 1
-        # delta_days = min(group_days, max_absent_days)
-        delta_days = max_absent_days - 1
+        # delta_days = min(group_days, read_diary_days)
+        delta_days = read_diary_days - 1
 
         date_end = datetime.date.today() + datetime.timedelta(days=-delta_days)
         checkin_dates = []
@@ -156,19 +156,19 @@ class Team:
             {'early_checkin': early_checkin}
         )
 
-        self.get_absent_days(member, max_absent_days)
+        self.get_absent_days(member, read_diary_days)
         return
 
-    def get_absent_days(self, member, max_absent_days):
+    def get_absent_days(self, member, read_diary_days):
         try:
             checkin_dates = member['checkin_dates']
         except KeyError:
-            self.analyse_checkin_diary(member, max_absent_days)
+            self.analyse_checkin_diary(member, read_diary_days)
             checkin_dates = member['checkin_dates']
 
         checkin_dates = sorted(checkin_dates, reverse=True)
 
-        absent_days = max_absent_days - len(checkin_dates)
+        absent_days = read_diary_days - len(checkin_dates)
 
         """
         try:
@@ -191,6 +191,45 @@ class Team:
                 result.append(member)
         return result
 
+    def filter_absent_two_days(self, count_today):
+        result = []
+        for login_id, member in self.members_dict.items():
+            checkin_dates = member['checkin_dates']
+            date_today = datetime.date.today()
+            date_yesterday = datetime.date.today() + datetime.timedelta(days=-1)
+            date_before_yesterday = datetime.date.today() + datetime.timedelta(days=-2)
+            if count_today == 1:
+                if (date_today in checkin_dates) is False and \
+                        (date_yesterday in checkin_dates) is False:
+                    result.append(member)
+            elif count_today == 0:
+                if (date_yesterday in checkin_dates) is False and \
+                        (date_before_yesterday in checkin_dates) is False:
+                    result.append(member)
+        return result
 
+    def filter_new_member(self, team_req, count_today):
+        result = []
+        print(team_req)
+        for login_id, member in self.members_dict.items():
+            group_days = int(member['days'])
+            checkin_dates = member['checkin_dates']
+            date_today = datetime.date.today()
+            date_yesterday = datetime.date.today() + datetime.timedelta(days=-1)
+            if group_days > team_req:
+                continue
+            if count_today == 1:
+                if (date_today in checkin_dates) is False:
+                    result.append(member)
+            elif count_today == 0:
+                if (date_yesterday in checkin_dates) is False:
+                    result.append(member)
+        return result
 
-
+    def filter_rate(self, min_rate):
+        result = []
+        for login_id, member in self.members_dict.items():
+            rate = float(member['rate'][:-1])
+            if rate < min_rate:
+                result.append(member)
+        return result

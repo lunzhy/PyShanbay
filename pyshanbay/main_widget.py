@@ -35,16 +35,16 @@ class UserDiaryThread(QtCore.QThread):
 
     diary_parsed = QtCore.pyqtSignal()
 
-    def __init__(self, team, members, max_absent):
+    def __init__(self, team, members, read_diary_days):
         super(UserDiaryThread, self).__init__()
         self.team = team
-        self.max_absent = max_absent
+        self.read_diary_days = read_diary_days
         self.members = members
 
     def run(self):
         parse_members = self.members
         for index, member in enumerate(parse_members):
-            self.team.analyse_checkin_diary(member, self.max_absent)
+            self.team.analyse_checkin_diary(member, self.read_diary_days)
             self.diary_parsed.emit()
 
 
@@ -61,8 +61,10 @@ class MainWidget(UIMainWidget):
         self.shanbay.login()
         self.team = Team(self.shanbay)
         self.group_list = []
-
-        self.max_absent_days = self.config.cfg_parser['Data'].getint('max_absent_days')
+        self.diary_all_loaded = False
+        self.team_req = self.config.cfg_parser['Filter'].getint('team_requirement')
+        self.read_diary_days = self.config.cfg_parser['Data'].getint('read_diary_days')
+        self.min_rate = self.config.cfg_parser['Filter'].getfloat('min_rate') * 100
 
         # manipulate the threads
         self.load_team_thread = LoadTeamThread(self.team)
@@ -75,10 +77,16 @@ class MainWidget(UIMainWidget):
         self.update_ui()
 
     def update_ui(self):
-        txt_absent_days = "%s%s" % (self.max_absent_days, self.label_absent_days.text()[2:])
+        txt_absent_days = "%s%s" % (self.read_diary_days, self.label_absent_days.text()[2:])
         self.label_absent_days.setText(txt_absent_days)
-        txt_absent_days = "%s%s" % (self.max_absent_days, self.label_search_absent.text()[2:])
+        txt_absent_days = "%s%s" % (self.read_diary_days, self.label_search_absent.text()[2:])
         self.label_search_absent.setText(txt_absent_days)
+
+        self.cbb_group_list.addItem('--请选择筛选条件--')
+        self.cbb_group_list.addItem('连续两天缺卡')
+        self.cbb_group_list.addItem('组龄小于%s天查卡日缺卡' % self.team_req)
+
+        self.cbb_group_list.addItem('打卡率低于%s%%' % str(self.min_rate))
         return None
 
     @staticmethod
@@ -99,7 +107,7 @@ class MainWidget(UIMainWidget):
                 try:
                     new_text = re.sub(patt, str(member[key]), new_text)
                 except KeyError:
-                    self.team.analyse_checkin_diary(member, self.max_absent_days)
+                    self.team.analyse_checkin_diary(member, self.read_diary_days)
                     try:
                         new_text = re.sub(patt, str(member[key]), new_text)
                     except KeyError:
@@ -192,7 +200,7 @@ class MainWidget(UIMainWidget):
         self.btn_group_add.clicked.connect(self.do_add_group)
         self.btn_group_remove.clicked.connect(self.do_remove_group)
         self.btn_absent_days.clicked.connect(self.do_search_absent)
-        self.btn_clear_group.clicked.connect(self.do_clear_group_table)
+        self.btn_clear_group.clicked.connect(self.do_clear_group)
 
         self.tb_group.itemSelectionChanged.connect(self.selected_member)
         self.tb_group.itemSelectionChanged.connect(self.clear_table_recent)
@@ -202,6 +210,8 @@ class MainWidget(UIMainWidget):
 
         self.tb_members.mouseDoubleClickEvent = self.do_double_click_member_table
         self.tb_group.mouseDoubleClickEvent = self.do_double_click_group_table
+
+        self.btn_group_filter.clicked.connect(self.do_filter)
 
         return None
 
@@ -239,8 +249,8 @@ class MainWidget(UIMainWidget):
                 try:
                     absent_days = member['absent']
                 except KeyError:
-                    # max_absent = self.max_absent_days
-                    # self.team.get_absent_days(member, max_absent)
+                    # read_diary_days = self.read_diary_days
+                    # self.team.get_absent_days(member, read_diary_days)
                     absent_days = 'N/A'
 
                 new_item = QtGui.QTableWidgetItem(str(absent_days))
@@ -594,7 +604,7 @@ class MainWidget(UIMainWidget):
 
     def do_search(self):
         text = self.edit_search.text().strip()
-        if not len(text) is 0:
+        if not len(text) == 0:
             search_result = self.team.search(str(text))
 
             self.tb_members.clearContents()
@@ -691,23 +701,23 @@ class MainWidget(UIMainWidget):
             QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
             return None
 
-        max_absent = self.max_absent_days
+        read_diary_days = self.read_diary_days
         try:
             absent_days = int(self.edit_absent_days.text())
-            if (0 <= absent_days <= max_absent) is not True:
+            if (0 <= absent_days <= read_diary_days) is not True:
                 raise ValueError
         except ValueError:
-            info = 'Please input a number between 0 and %s .' % max_absent
+            info = 'Please input a number between 0 and %s .' % read_diary_days
             QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
             return None
 
-        self.do_clear_group_table()
+        self.do_clear_group()
         search_results = self.team.search_absent(absent_days)
-        self.group_list += search_results
+        self.group_list = search_results
         self.set_table_data(self.tb_group, search_results)
         return None
 
-    def do_clear_group_table(self):
+    def do_clear_group(self):
         self.group_list.clear()
         self.tb_group.clearContents()
         self.set_table_data(self.tb_group, [])
@@ -718,7 +728,7 @@ class MainWidget(UIMainWidget):
         [thread.quit() for thread in self.diary_threads]
         self.diary_threads = []
 
-        max_absent = self.max_absent_days
+        read_diary_days = self.read_diary_days
         number_of_threads = self.config.cfg_parser['Data'].getint('number_of_threads')
 
         all_members = self.team.all_members()
@@ -734,10 +744,10 @@ class MainWidget(UIMainWidget):
         for index in range(full):
             members = all_members[index*threads_capacity: (index+1)*threads_capacity]
             self.diary_threads.append(
-                UserDiaryThread(self.team, members, max_absent)
+                UserDiaryThread(self.team, members, read_diary_days)
             )
         members = all_members[threads_capacity*full:]
-        self.diary_threads.append(UserDiaryThread(self.team, members, max_absent))
+        self.diary_threads.append(UserDiaryThread(self.team, members, read_diary_days))
 
         for thread in self.diary_threads:
             thread.diary_parsed.connect(self._user_diary_parsed)
@@ -755,6 +765,7 @@ class MainWidget(UIMainWidget):
 
         diary_loaded = True if self.diary_parsed_count == len(self.team.all_members()) else False
         if diary_loaded is True:
+            self.diary_all_loaded = True
             self.find_early_checkin_member()
         return None
 
@@ -784,6 +795,31 @@ class MainWidget(UIMainWidget):
                 for col in range(self.tb_members.columnCount()):
                     self.tb_members.item(row_index, col).setBackground(
                         QtGui.QColor(255, 0, 0))
+        return None
+
+    def do_filter(self):
+        if self.diary_all_loaded is False:
+            info = 'Please wait until all the checkin diaries are parsed.'
+            QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            return None
+
+        current_index = self.cbb_group_list.currentIndex()
+        count_today = 0 if self.chb_manage_day.isChecked() is True else 1
+
+        filter_results = []
+        self.do_clear_group()
+
+        if current_index == 0:
+            return None
+        if current_index == 1:  # absent for two days
+            filter_results = self.team.filter_absent_two_days(count_today)
+        elif current_index == 2:  # new member
+            filter_results = self.team.filter_new_member(self.team_req, count_today)
+        elif current_index == 3:  # rate
+            filter_results = self.team.filter_rate(self.min_rate)
+
+        self.group_list == filter_results
+        self.set_table_data(self.tb_group, filter_results)
         return None
 
 

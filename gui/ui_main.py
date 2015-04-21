@@ -336,6 +336,7 @@ class UIMainWidget(QtGui.QWidget):
         self.rbtn_group.setText("已选列表")
         self.btn_clear_group.setText("清除列表")
         self.btn_group_filter.setText("筛选")
+        self.chb_manage_day.setText("转天查卡")
         return None
     
     def setup_ui_stretch(self):
@@ -367,7 +368,8 @@ class UIMainWidget(QtGui.QWidget):
         self.label_get_diary = QtGui.QLabel(self)
         self.label_get_diary.setObjectName(_fromUtf8("label_get_diary"))
         self.horizontalLayout_2.addWidget(self.label_get_diary)
-        spacerItem2 = QtGui.QSpacerItem(400, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem2 = QtGui.QSpacerItem(400, 20, QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem2)
         self.btn_refresh = QtGui.QPushButton(self)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -417,7 +419,8 @@ class UIMainWidget(QtGui.QWidget):
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setSpacing(0)
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem3)
         self.label_search_absent = QtGui.QLabel(self)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred)
@@ -447,11 +450,15 @@ class UIMainWidget(QtGui.QWidget):
         self.btn_absent_days.setObjectName(_fromUtf8("btn_absent_days"))
         self.horizontalLayout_4.addWidget(self.btn_absent_days)
         self.gridLayout_5.addLayout(self.horizontalLayout_4, 2, 1, 1, 1)
+        self.chb_manage_day = QtGui.QCheckBox(self)
+        self.chb_manage_day.setObjectName(_fromUtf8("chb_manage_day"))
+        self.gridLayout_5.addWidget(self.chb_manage_day, 2, 0, 1, 1)
         self.horizontalLayout.addLayout(self.gridLayout_5)
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        spacerItem4 = QtGui.QSpacerItem(20, 138, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem4 = QtGui.QSpacerItem(20, 138, QtGui.QSizePolicy.Minimum,
+                                        QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem4)
         self.btn_group_add = QtGui.QPushButton(self)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -473,7 +480,8 @@ class UIMainWidget(QtGui.QWidget):
         self.btn_group_remove.setMaximumSize(QtCore.QSize(50, 16777215))
         self.btn_group_remove.setObjectName(_fromUtf8("btn_group_remove"))
         self.verticalLayout.addWidget(self.btn_group_remove)
-        spacerItem6 = QtGui.QSpacerItem(20, 158, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem6 = QtGui.QSpacerItem(20, 158, QtGui.QSizePolicy.Minimum,
+                                        QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem6)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.gridLayout_4 = QtGui.QGridLayout()
@@ -500,7 +508,8 @@ class UIMainWidget(QtGui.QWidget):
         self.btn_save_group.setFlat(False)
         self.btn_save_group.setObjectName(_fromUtf8("btn_save_group"))
         self.horizontalLayout_6.addWidget(self.btn_save_group)
-        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_6.addItem(spacerItem7)
         self.btn_clear_group = QtGui.QPushButton(self)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
@@ -550,11 +559,13 @@ class UIMainWidget(QtGui.QWidget):
         self.rbtn_group.setChecked(False)
         self.rbtn_group.setObjectName(_fromUtf8("rbtn_group"))
         self.horizontalLayout_5.addWidget(self.rbtn_group)
-        spacerItem8 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem8 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem8)
         self.btn_open_home = QtGui.QLabel(self)
         self.btn_open_home.setMinimumSize(QtCore.QSize(20, 0))
-        self.btn_open_home.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.btn_open_home.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.btn_open_home.setOpenExternalLinks(False)
         self.btn_open_home.setObjectName(_fromUtf8("btn_open_home"))
         self.horizontalLayout_5.addWidget(self.btn_open_home)
@@ -647,7 +658,8 @@ class UIMainWidget(QtGui.QWidget):
         self.btn_recent_words.setSizePolicy(sizePolicy)
         self.btn_recent_words.setObjectName(_fromUtf8("btn_recent_words"))
         self.gridLayout_recentWord.addWidget(self.btn_recent_words, 0, 2, 1, 1)
-        spacerItem9 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem9 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                        QtGui.QSizePolicy.Minimum)
         self.gridLayout_recentWord.addItem(spacerItem9, 0, 1, 1, 1)
         self.tb_recent_words = QtGui.QTableWidget(self)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
@@ -681,7 +693,8 @@ class UIMainWidget(QtGui.QWidget):
         self.btn_recent_checkin.setSizePolicy(sizePolicy)
         self.btn_recent_checkin.setObjectName(_fromUtf8("btn_recent_checkin"))
         self.gridLayout_recentCheckin.addWidget(self.btn_recent_checkin, 0, 2, 1, 1)
-        spacerItem10 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem10 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                         QtGui.QSizePolicy.Minimum)
         self.gridLayout_recentCheckin.addItem(spacerItem10, 0, 1, 1, 1)
         self.tb_recent_checkin = QtGui.QTableWidget(self)
         self.tb_recent_checkin.setMinimumSize(QtCore.QSize(0, 120))
@@ -697,7 +710,8 @@ class UIMainWidget(QtGui.QWidget):
         self.verticalLayout_2.addWidget(self.line_4)
         self.gridLayout_2 = QtGui.QGridLayout()
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        spacerItem11 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem11 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                         QtGui.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem11, 0, 1, 1, 1)
         self.btn_send_msg = QtGui.QPushButton(self)
         self.btn_send_msg.setObjectName(_fromUtf8("btn_send_msg"))
@@ -725,7 +739,8 @@ class UIMainWidget(QtGui.QWidget):
         self.chb_kickout_group = QtGui.QCheckBox(self)
         self.chb_kickout_group.setObjectName(_fromUtf8("chb_kickout_group"))
         self.gridLayout_3.addWidget(self.chb_kickout_group, 0, 2, 1, 1)
-        spacerItem12 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem12 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding,
+                                         QtGui.QSizePolicy.Minimum)
         self.gridLayout_3.addItem(spacerItem12, 0, 1, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout_3)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
