@@ -314,7 +314,7 @@ class MainWidget(UIMainWidget):
         self.btn_refresh.setEnabled(True)
         self.edit_search.setEnabled(True)
 
-        # self.load_user_diary()
+        self.diary_all_loaded = False
         self.load_user_diary()
         return None
 
