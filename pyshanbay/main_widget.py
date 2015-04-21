@@ -10,6 +10,7 @@ from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
 import re
+import time
 
 
 class LoadTeamThread(QtCore.QThread):
@@ -44,7 +45,11 @@ class UserDiaryThread(QtCore.QThread):
     def run(self):
         parse_members = self.members
         for index, member in enumerate(parse_members):
-            self.team.analyse_checkin_diary(member, self.read_diary_days)
+            try:
+                self.team.analyse_checkin_diary(member, self.read_diary_days)
+            except:
+                time.sleep(5)
+                self.team.analyse_checkin_diary(member, self.read_diary_days)
             self.diary_parsed.emit()
 
 
@@ -628,7 +633,7 @@ class MainWidget(UIMainWidget):
         self.text_points.setText('N/A')
         self.text_rates.setText('N/A')
         self.text_checkins.setText('N/A')
-        pass
+        self.text_absent_days.setText('N/A')
         return None
 
     def table_item_clicked(self, item):
@@ -807,11 +812,12 @@ class MainWidget(UIMainWidget):
         current_index = self.cbb_group_list.currentIndex()
         count_today = 0 if self.chb_manage_day.isChecked() is True else 1
 
+        if current_index == 0:
+            return None
+
         filter_results = []
         self.do_clear_group()
 
-        if current_index == 0:
-            return None
         if current_index == 1:  # absent for two days
             filter_results = self.team.filter_absent_two_days(count_today)
         elif current_index == 2:  # new member
