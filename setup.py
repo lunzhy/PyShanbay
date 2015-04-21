@@ -11,7 +11,7 @@ exe = Executable(
     icon='icon.ico'
 )
 
-includefiles=['icon.ico']
+includefiles=['icon.ico', 'ask_for_leave.txt']
 setup(
     name = "PyShanbay",
     options = {"build_exe": {"includes":includes, "include_files":includefiles}},
