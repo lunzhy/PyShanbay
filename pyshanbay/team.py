@@ -233,3 +233,9 @@ class Team:
             if rate < min_rate:
                 result.append(member)
         return result
+
+    def load_leave_list(self):
+        with open('ask_for_leave.txt', 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        off_nicknames = [line.strip() for line in lines]
+        return off_nicknames

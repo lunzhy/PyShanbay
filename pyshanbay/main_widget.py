@@ -212,6 +212,7 @@ class MainWidget(UIMainWidget):
         self.tb_group.mouseDoubleClickEvent = self.do_double_click_group_table
 
         self.btn_group_filter.clicked.connect(self.do_filter)
+        self.btn_show_leave.toggled.connect(self.do_show_leave)
 
         return None
 
@@ -821,6 +822,37 @@ class MainWidget(UIMainWidget):
         self.group_list == filter_results
         self.set_table_data(self.tb_group, filter_results)
         return None
+
+    def do_show_leave(self):
+        try:
+            leave_nicknames = self.team.load_leave_list()
+        except FileNotFoundError:
+            info = 'The file for member asking for leave [ask_for_leave.txt] does not exist.'
+            QtGui.QMessageBox.warning(self, 'Warning', info, QtGui.QMessageBox.Yes)
+            return None
+
+        if self.tb_group.rowCount() == 0:
+            self.btn_show_leave.setChecked(False)
+            return None
+
+        if self.btn_show_leave.isChecked():
+            row_count = self.tb_group.rowCount()
+            for row_index in range(row_count):
+                nickname = self.tb_group.item(row_index, 6).text()  # column 6 for nickname
+                if nickname in leave_nicknames:
+                    col_count = self.tb_group.columnCount()
+                    for col_index in range(col_count):
+                        self.tb_group.item(row_index, col_index).setBackground(
+                            QtGui.QColor(255, 255, 0)
+                        )
+        else:  # not checked
+            row_count = self.tb_group.rowCount()
+            col_count = self.tb_group.columnCount()
+            for row_index in range(row_count):
+                for col_index in range(col_count):
+                    self.tb_group.item(row_index, col_index).setBackground(
+                        QtGui.QColor(255, 255, 255)
+                    )
 
 
 if __name__ == '__main__':
