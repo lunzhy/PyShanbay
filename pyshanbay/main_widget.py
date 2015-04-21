@@ -819,7 +819,7 @@ class MainWidget(UIMainWidget):
         elif current_index == 3:  # rate
             filter_results = self.team.filter_rate(self.min_rate)
 
-        self.group_list == filter_results
+        self.group_list = filter_results
         self.set_table_data(self.tb_group, filter_results)
         return None
 
@@ -836,23 +836,17 @@ class MainWidget(UIMainWidget):
             return None
 
         if self.btn_show_leave.isChecked():
-            row_count = self.tb_group.rowCount()
-            for row_index in range(row_count):
-                nickname = self.tb_group.item(row_index, 6).text()  # column 6 for nickname
-                if nickname in leave_nicknames:
-                    col_count = self.tb_group.columnCount()
-                    for col_index in range(col_count):
-                        self.tb_group.item(row_index, col_index).setBackground(
-                            QtGui.QColor(255, 255, 0)
-                        )
+            color = QtGui.QColor(255, 255, 0)
         else:  # not checked
-            row_count = self.tb_group.rowCount()
-            col_count = self.tb_group.columnCount()
-            for row_index in range(row_count):
+            color = QtGui.QColor(255, 255, 255)
+
+        row_count = self.tb_group.rowCount()
+        for row_index in range(row_count):
+            nickname = self.tb_group.item(row_index, 6).text()  # column 6 for nickname
+            if nickname in leave_nicknames:
+                col_count = self.tb_group.columnCount()
                 for col_index in range(col_count):
-                    self.tb_group.item(row_index, col_index).setBackground(
-                        QtGui.QColor(255, 255, 255)
-                    )
+                    self.tb_group.item(row_index, col_index).setBackground(color)
 
 
 if __name__ == '__main__':

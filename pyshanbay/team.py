@@ -210,7 +210,6 @@ class Team:
 
     def filter_new_member(self, team_req, count_today):
         result = []
-        print(team_req)
         for login_id, member in self.members_dict.items():
             group_days = int(member['days'])
             checkin_dates = member['checkin_dates']
