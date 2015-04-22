@@ -11,6 +11,10 @@ class Team:
         self.shanbay = shanbay
         return
 
+    def clear(self):
+        self.members_dict.clear()
+        return None
+
     def load(self):
         # get total page number of members
         self.members_dict.clear()
