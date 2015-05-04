@@ -3,6 +3,7 @@
 __author__ = 'Lunzhy'
 import pyshanbay.page_parser as parser
 import datetime
+from calendar import monthrange
 
 
 class Team:
@@ -10,6 +11,18 @@ class Team:
         self.members_dict = {}
         self.shanbay = shanbay
         return
+
+    @staticmethod
+    def get_read_diary_day(config):
+        read_last_month = config.cfg_parser['Data'].getboolean('read_last_month')
+        read_diary_days = config.cfg_parser['Data'].getint('read_diary_days')
+        if read_last_month is True:
+            today_date = datetime.date.today()
+            day_this_month = today_date.day
+            day_last_month = today_date + datetime.timedelta(days=-(day_this_month+1))
+            wd, num_days = monthrange(day_last_month.year, day_last_month.month)
+            read_diary_days = max(day_this_month + num_days, read_diary_days)
+        return read_diary_days
 
     def load(self):
         # get total page number of members
@@ -238,3 +251,25 @@ class Team:
             lines = f.readlines()
         off_nicknames = [line.strip() for line in lines]
         return off_nicknames
+
+    def filter_full_last_month(self):
+        result = []
+        for login_id, member in self.members_dict.items():
+            checkin_dates = member['checkin_dates']
+
+            today_date = datetime.date.today()
+            last_day_last_month = today_date + datetime.timedelta(days=-(today_date.day + 1))
+            first_day_last_month = datetime.datetime(last_day_last_month.year,
+                                                     last_day_last_month.month, 1)
+            wd, num_days = monthrange(last_day_last_month.year, last_day_last_month.month)
+            full_last_month = True
+            for delta_days in range(num_days):
+                day_to_check = first_day_last_month + datetime.timedelta(days=delta_days)
+                if day_to_check not in checkin_dates:
+                    full_last_month = False
+                    break
+
+            if full_last_month is True:
+                result.append(member)
+        return result
+

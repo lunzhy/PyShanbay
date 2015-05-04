@@ -67,9 +67,13 @@ class MainWidget(UIMainWidget):
         self.team = Team(self.shanbay)
         self.group_list = []
         self.diary_all_loaded = False
+
+        self.full_last_month = self.config.cfg_parser['Data'].getboolean('read_last_month')
+        self.read_diary_days = self.team.get_read_diary_day(self.config)
+
         self.team_req = self.config.cfg_parser['Filter'].getint('team_requirement')
-        self.read_diary_days = self.config.cfg_parser['Data'].getint('read_diary_days')
         self.min_rate = self.config.cfg_parser['Filter'].getfloat('min_rate') * 100
+
 
         # manipulate the threads
         self.load_team_thread = LoadTeamThread(self.team)
@@ -90,8 +94,8 @@ class MainWidget(UIMainWidget):
         self.cbb_group_list.addItem('--请选择筛选条件--')
         self.cbb_group_list.addItem('连续两天缺卡')
         self.cbb_group_list.addItem('组龄小于%s天查卡日缺卡' % self.team_req)
-
         self.cbb_group_list.addItem('打卡率低于%s%%' % str(self.min_rate))
+        self.cbb_group_list.addItem('上月全勤打卡')
         return None
 
     @staticmethod
@@ -824,6 +828,8 @@ class MainWidget(UIMainWidget):
             filter_results = self.team.filter_new_member(self.team_req, count_today)
         elif current_index == 3:  # rate
             filter_results = self.team.filter_rate(self.min_rate)
+        elif current_index == 4:  # full last month
+            filter_results = self.team.filter_full_last_month()
 
         self.group_list = filter_results
         self.set_table_data(self.tb_group, filter_results)

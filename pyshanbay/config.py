@@ -24,6 +24,7 @@ class ShanbayConfig:
         section = self.cfg_parser['Data']
         section['read_diary_days'] = '15'
         section['number_of_threads'] = '10'
+        section['read_last_month'] = 'no'
 
         self.cfg_parser.add_section('Filter')
         section = self.cfg_parser['Filter']
