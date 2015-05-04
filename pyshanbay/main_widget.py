@@ -98,7 +98,8 @@ class MainWidget(UIMainWidget):
         self.cbb_group_list.addItem('连续两天缺卡')
         self.cbb_group_list.addItem('组龄小于%s天查卡日缺卡' % self.team_req)
         self.cbb_group_list.addItem('打卡率低于%s%%' % str(self.min_rate))
-        self.cbb_group_list.addItem('上月全勤打卡')
+        if self.full_last_month is True:
+            self.cbb_group_list.addItem('上月全勤打卡')
         return None
 
     @staticmethod
