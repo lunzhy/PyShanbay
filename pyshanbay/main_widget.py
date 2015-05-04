@@ -75,7 +75,8 @@ class MainWidget(UIMainWidget):
         self.team_req = self.config.cfg_parser['Filter'].getint('team_requirement')
         self.min_rate = self.config.cfg_parser['Filter'].getfloat('min_rate') * 100
 
-        self.dismiss_log = DismissLog(self.min_rate, self.team_req)
+        date_str = datetime.date.today().strftime('%Y-%m-%d.txt')
+        self.dismiss_log = DismissLog(self.min_rate, self.team_req, filename=date_str)
 
         # manipulate the threads
         self.load_team_thread = LoadTeamThread(self.team)

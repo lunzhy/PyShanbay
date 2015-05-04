@@ -3,6 +3,7 @@
 __author__ = 'Lunzhy'
 import configparser
 import datetime
+import os
 
 
 class ShanbayConfig:
@@ -40,7 +41,9 @@ class DismissLog:
     def __init__(self, min_rate, team_req, filename='group_list.log'):
         self.min_rate = min_rate
         self.team_req = team_req
-        self.log_file = filename
+        if os.path.exists('log') is not True:
+            os.makedirs('log')
+        self.log_file = os.path.join('log', filename)
         try:
             with open(self.log_file) as f:
                 pass
