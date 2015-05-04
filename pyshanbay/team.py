@@ -259,8 +259,8 @@ class Team:
 
             today_date = datetime.date.today()
             last_day_last_month = today_date + datetime.timedelta(days=-(today_date.day + 1))
-            first_day_last_month = datetime.datetime(last_day_last_month.year,
-                                                     last_day_last_month.month, 1)
+            first_day_last_month = datetime.date(last_day_last_month.year,
+                                                 last_day_last_month.month, 1)
             wd, num_days = monthrange(last_day_last_month.year, last_day_last_month.month)
             full_last_month = True
             for delta_days in range(num_days):

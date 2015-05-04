@@ -6,6 +6,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 from gui.ui_main import UIMainWidget
 from pyshanbay.shanbay import VisitShanbay
+from pyshanbay.config import DismissLog
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
@@ -74,6 +75,7 @@ class MainWidget(UIMainWidget):
         self.team_req = self.config.cfg_parser['Filter'].getint('team_requirement')
         self.min_rate = self.config.cfg_parser['Filter'].getfloat('min_rate') * 100
 
+        self.dismiss_log = DismissLog(self.min_rate, self.team_req)
 
         # manipulate the threads
         self.load_team_thread = LoadTeamThread(self.team)
@@ -222,7 +224,7 @@ class MainWidget(UIMainWidget):
 
         self.btn_group_filter.clicked.connect(self.do_filter)
         self.btn_show_leave.toggled.connect(self.do_show_leave)
-
+        self.btn_save_group.clicked.connect(self.do_save_group)
         return None
 
     def set_table_data(self, table_to_set, members_data):
@@ -859,6 +861,16 @@ class MainWidget(UIMainWidget):
                 col_count = self.tb_group.columnCount()
                 for col_index in range(col_count):
                     self.tb_group.item(row_index, col_index).setBackground(color)
+        return None
+
+    def do_save_group(self):
+        if len(self.group_list) == 0:
+            return None
+        filter_index = self.cbb_group_list.currentIndex()
+        self.dismiss_log.write_log(self.group_list, filter_index)
+        info = 'Write the group list to log file.'
+        QtGui.QMessageBox.warning(self, 'Done', info, QtGui.QMessageBox.Yes)
+        return None
 
 
 if __name__ == '__main__':

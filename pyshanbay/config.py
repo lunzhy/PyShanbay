@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'Lunzhy'
 import configparser
-import os
+import datetime
 
 
 class ShanbayConfig:
@@ -34,3 +34,43 @@ class ShanbayConfig:
         with open(filename, 'w') as file:
             self.cfg_parser.write(file)
         return
+
+
+class DismissLog:
+    def __init__(self, min_rate, team_req, filename='group_list.log'):
+        self.min_rate = min_rate
+        self.team_req = team_req
+        self.log_file = filename
+        try:
+            with open(self.log_file) as f:
+                pass
+        except FileNotFoundError:
+            with open(self.log_file, 'w', encoding='utf8') as f:
+                pass
+        return
+
+    def write_log(self, members, reason_index):
+        with open(self.log_file, 'a', encoding='utf8') as f:
+            now = datetime.datetime.now()
+            f.write('[%s]\n' % now.strftime('%Y-%m-%d %H:%M:%S'))
+
+            for member in members:
+                nickname = member['nickname']
+                rank = member['rank']
+                rate = member['rate']
+                days = member['days']
+                line = '昵称：%s  排名：%s  组龄：%s  打卡率：%s' % (nickname, rank, days, rate)
+                if reason_index == 0:
+                    reason = '未指定原因'
+                elif reason_index == 1:
+                    reason = '连续两天缺卡'
+                elif reason_index == 2:
+                    reason = '入组%s天未全部打卡' % self.team_req
+                elif reason_index == 3:
+                    reason = '打卡率低于%s%%' % str(self.min_rate)
+                elif reason_index == 4:
+                    reason = '上月全勤打卡'
+                line = '%s  原因：%s\n' % (line, reason)
+                f.write(line)
+        return None
+
