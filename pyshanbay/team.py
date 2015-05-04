@@ -11,7 +11,11 @@ class Team:
         self.members_dict = {}
         self.shanbay = shanbay
         return
-
+        
+    def clear(self):
+        self.members_dict.clear()
+        return None
+    
     @staticmethod
     def get_read_diary_day(config):
         read_last_month = config.cfg_parser['Data'].getboolean('read_last_month')

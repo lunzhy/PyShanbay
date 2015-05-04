@@ -325,7 +325,6 @@ class MainWidget(UIMainWidget):
         self.btn_refresh.setEnabled(True)
         self.edit_search.setEnabled(True)
 
-        self.diary_all_loaded = False
         self.load_user_diary()
         return None
 
@@ -658,8 +657,11 @@ class MainWidget(UIMainWidget):
         return None
 
     def load_team(self):
+        self.team.clear()
         self.set_table_data(self.tb_members, [])
         self.set_table_data(self.tb_group, [])
+        self.diary_all_loaded = False
+        self.diary_parsed_count = 0
         self.group_list.clear()
         self.clear_info_text()
         self.clear_table_recent()
