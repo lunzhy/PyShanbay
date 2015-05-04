@@ -59,7 +59,7 @@ class DismissLog:
                 rank = member['rank']
                 rate = member['rate']
                 days = member['days']
-                line = '昵称：%s  排名：%s  组龄：%s  打卡率：%s' % (nickname, rank, days, rate)
+                line = '昵称：%s\t\t\t排名：%s\t\t组龄：%s\t\t打卡率：%s' % (nickname, rank, days, rate)
                 if reason_index == 0:
                     reason = '未指定原因'
                 elif reason_index == 1:
@@ -70,7 +70,8 @@ class DismissLog:
                     reason = '打卡率低于%s%%' % str(self.min_rate)
                 elif reason_index == 4:
                     reason = '上月全勤打卡'
-                line = '%s  原因：%s\n' % (line, reason)
+                line = '%s\t\t原因：%s\n' % (line, reason)
                 f.write(line)
+            f.write('\n\n')
         return None
 
