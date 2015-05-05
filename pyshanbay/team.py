@@ -120,12 +120,6 @@ class Team:
         return None
 
     def analyse_checkin_diary(self, member, read_diary_days):
-        try:
-            checkin_dates = member['checkin_dates']
-            return None
-        except KeyError:
-            pass
-
         login_id = member['login_id']
         main_page = self.shanbay.visit_checkin_diary_main(login_id)
         username, total_checkin_days, diary_pages = \
@@ -177,14 +171,8 @@ class Team:
         return
 
     def get_absent_days(self, member, read_diary_days):
-        try:
-            checkin_dates = member['checkin_dates']
-        except KeyError:
-            self.analyse_checkin_diary(member, read_diary_days)
-            checkin_dates = member['checkin_dates']
-
+        checkin_dates = member['checkin_dates']
         checkin_dates = sorted(checkin_dates, reverse=True)
-
         absent_days = read_diary_days - len(checkin_dates)
 
         """

@@ -78,3 +78,21 @@ class DismissLog:
             f.write('\n\n')
         return None
 
+
+class DebugLog:
+    def __init__(self, filename='debug.log'):
+        self.log_file = filename
+        try:
+            with open(self.log_file) as f:
+                pass
+        except FileNotFoundError:
+            with open(self.log_file, 'w', encoding='utf8') as f:
+                pass
+        return
+
+    def write_log(self, message):
+        with open(self.log_file, 'a', encoding='utf8') as f:
+            now = datetime.datetime.now()
+            f.write('[%s]\n' % now.strftime('%Y-%m-%d %H:%M:%S'))
+            f.write('%s\n' % message)
+        return

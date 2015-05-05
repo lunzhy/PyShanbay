@@ -6,7 +6,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 from gui.ui_main import UIMainWidget
 from pyshanbay.shanbay import VisitShanbay
-from pyshanbay.config import DismissLog
+from pyshanbay.config import DismissLog, DebugLog
 from pyshanbay import page_parser as parser
 from pyshanbay.team import Team
 import datetime
@@ -42,15 +42,19 @@ class UserDiaryThread(QtCore.QThread):
         self.team = team
         self.read_diary_days = read_diary_days
         self.members = members
+        self.debug_log = DebugLog()
 
     def run(self):
         parse_members = self.members
         for index, member in enumerate(parse_members):
-            try:
-                self.team.analyse_checkin_diary(member, self.read_diary_days)
-            except:
-                time.sleep(5)
-                self.team.analyse_checkin_diary(member, self.read_diary_days)
+            for i in range(10):
+                try:
+                    self.team.analyse_checkin_diary(member, self.read_diary_days)
+                    break
+                except:
+                    time.sleep(7)
+                    self.debug_log.write_log('exception in parsing%s' % member['nickname'])
+                    continue
             self.diary_parsed.emit()
 
 
