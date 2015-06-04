@@ -37,29 +37,50 @@ class UserDiaryThread(QtCore.QThread):
 
     diary_parsed = QtCore.pyqtSignal()
 
-    def __init__(self, team, members, read_diary_days):
+    def __init__(self, team, members, read_diary_days, debug_log):
         super(UserDiaryThread, self).__init__()
         self.team = team
         self.read_diary_days = read_diary_days
         self.members = members
-        self.debug_log = DebugLog()
+        self.debug_log = debug_log
+        self.failed_members = []  # the members that current thread fails to read
 
     def run(self):
         parse_members = self.members
-        for index, member in enumerate(parse_members):
-            for i in range(10):
-                try:
-                    self.team.analyse_checkin_diary(member, self.read_diary_days)
-                    break
-                except:
-                    time.sleep(7)
-                    self.debug_log.write_log('exception in parsing%s' % member['nickname'])
-                    continue
-            self.diary_parsed.emit()
+        self.read(parse_members)
+        # for index, member in enumerate(parse_members):
+        #     for i in range(10):
+        #         try:
+        #             self.team.analyse_checkin_diary(member, self.read_diary_days)
+        #             break
+        #         except:
+        #             time.sleep(7)
+        #             self.debug_log.write_log('exception in parsing%s' % member['nickname'])
+        #             continue
+        #     self.diary_parsed.emit()
+
+    def read(self, members_to_parse):
+        if len(members_to_parse) == 0:
+            return None
+
+        self.failed_members = []
+        for index, member in enumerate(members_to_parse):
+            try:
+                self.team.analyse_checkin_diary(member, self.read_diary_days)
+                self.diary_parsed.emit()
+            except:
+                self.debug_log.write_log('exception in parsing %s' % member['nickname'])
+                self.failed_members.append(member)
+
+        reload_nicknames = ','.join([member['nickname'] for member in self.failed_members])
+        self.debug_log.write_log('reload: %s' % reload_nicknames)
+        time.sleep(10)
+        self.read(self.failed_members)
+        return None
 
 
 class MainWidget(UIMainWidget):
-    def __init__(self, config):
+    def __init__(self, config, debug_log):
         super().__init__()
         self.refresh_time = ''
         self.config = config
@@ -89,6 +110,8 @@ class MainWidget(UIMainWidget):
 
         self.diary_threads = []
         self.diary_parsed_count = 0
+
+        self.debug_log = debug_log
 
         self.update_ui()
 
@@ -764,10 +787,11 @@ class MainWidget(UIMainWidget):
         for index in range(full):
             members = all_members[index*threads_capacity: (index+1)*threads_capacity]
             self.diary_threads.append(
-                UserDiaryThread(self.team, members, read_diary_days)
+                UserDiaryThread(self.team, members, read_diary_days, self.debug_log)
             )
         members = all_members[threads_capacity*full:]
-        self.diary_threads.append(UserDiaryThread(self.team, members, read_diary_days))
+        self.diary_threads.append(
+            UserDiaryThread(self.team, members, read_diary_days, self.debug_log))
 
         for thread in self.diary_threads:
             thread.diary_parsed.connect(self._user_diary_parsed)

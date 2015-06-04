@@ -82,12 +82,8 @@ class DismissLog:
 class DebugLog:
     def __init__(self, filename='debug.log'):
         self.log_file = filename
-        try:
-            with open(self.log_file) as f:
-                pass
-        except FileNotFoundError:
-            with open(self.log_file, 'w', encoding='utf8') as f:
-                pass
+        with open(self.log_file, 'w+', encoding='utf8') as f:
+            pass
         return
 
     def write_log(self, message):
