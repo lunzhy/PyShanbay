@@ -48,21 +48,8 @@ class UserDiaryThread(QtCore.QThread):
     def run(self):
         parse_members = self.members
         self.read(parse_members)
-        # for index, member in enumerate(parse_members):
-        #     for i in range(10):
-        #         try:
-        #             self.team.analyse_checkin_diary(member, self.read_diary_days)
-        #             break
-        #         except:
-        #             time.sleep(7)
-        #             self.debug_log.write_log('exception in parsing%s' % member['nickname'])
-        #             continue
-        #     self.diary_parsed.emit()
 
     def read(self, members_to_parse):
-        if len(members_to_parse) == 0:
-            return None
-
         self.failed_members = []
         for index, member in enumerate(members_to_parse):
             try:
@@ -72,6 +59,8 @@ class UserDiaryThread(QtCore.QThread):
                 self.debug_log.write_log('exception in parsing %s' % member['nickname'])
                 self.failed_members.append(member)
 
+        if len(self.failed_members) == 0:
+            return None
         reload_nicknames = ','.join([member['nickname'] for member in self.failed_members])
         self.debug_log.write_log('reload: %s' % reload_nicknames)
         time.sleep(10)
