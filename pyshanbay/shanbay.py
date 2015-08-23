@@ -112,8 +112,7 @@ class VisitShanbay:
         return now
 
     def send_message(self, recipient_list, subject, message_text):
-        url_sendmsg = urljoin(self.base_url, '/message/compose/')
-
+        url_sendmsg = urljoin(self.base_url, '/api/v1/message/')
         if isinstance(recipient_list, (list, tuple)):
             recipient = ','.join(recipient_list)
         else:
